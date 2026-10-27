@@ -10,7 +10,7 @@ npm ci
 
 Live application: https://aredth-autopay.primeswift1.chatgpt.site/
 
-This archive includes the AutoPay Assistant integration. AI answers require an OpenAI API key configured as a server secret. The source is archived here; extract the ZIP to work with the normal source tree.
+This archive includes free AutoPay Assistant testing mode. It calculates common invoice/client reports without an OpenAI key or OpenAI API charges. Paid provider mode is disabled by default. The source is archived here; extract the ZIP to work with the normal source tree.
 
 # AutoPay — Business invoice workspace
 
@@ -76,10 +76,12 @@ Tests cover shared membership, cross-business access rejection, origin/CSRF chec
 
 The hosted app supports payment simulations and manual bookkeeping, but it does not place real payment calls or charge money. Live payments require a separately configured provider/backend integration. No account passwords are stored by AutoPay.
 
-### AutoPay Assistant
+### AutoPay Assistant — free testing mode
 
-Open **Assistant** in the workspace sidebar to ask questions about invoices, overdue balances, or clients. Requests use the OpenAI Responses API from the server; the browser never receives the key. The default model is `gpt-5-mini` (override with the server variable `OPENAI_MODEL`).
+Open **Assistant** in the workspace sidebar. The default mode calculates summaries inside AutoPay without calling OpenAI. No API key is needed and chat requests create no OpenAI API charges. This is a rule-based testing assistant, not a generative AI model. Try invoice summaries, overdue/paid/unpaid reports, client balance rankings, a full client name, or an invoice number. Basic follow-ups retain a previously named client. Unsupported questions explain the available reports; arbitrary date ranges and general AI conversation are not supported.
 
-To activate the published assistant, use the OpenAI Developers secure key setup flow, then set `OPENAI_API_KEY` as a **secret** in this Site's production runtime environment and redeploy. Never put the key in source, the chat box, or a `VITE_`/public environment variable. Local development can use an ignored `.dev.vars` file with the same key name. API billing and model access must be enabled in the selected OpenAI project.
+Membership is checked on every request. Bank fields, notes, check references, contact emails/phones, and files are excluded from chat context. Summaries read current, non-deleted business records, up to 1,000 invoices and clients; lists show 10 rows and explain omissions. Conversation history stays in component memory and clears when leaving the Assistant page or switching businesses. No payments, calls, edits, or emails can be initiated by the assistant. Normal app hosting/storage usage is separate from OpenAI API billing.
 
-The assistant is read-only and checks business membership for every request. It excludes bank details, notes, check references, attachments, contact emails and phone numbers from its automatically supplied context. Questions and selected invoice/client data are sent to OpenAI, with `store: false`. Conversation history stays in component memory and clears when leaving the Assistant page or switching businesses. Shared usage is capped at 30 requests per business per hour and 200 across the site per UTC day. Configure an OpenAI project spending limit as an additional billing control. Snapshots cover at most 1,000 invoices and clients; exact server-calculated totals cover that snapshot and details are limited to the first 200 records of each type. Larger workspaces return a clear size error. Failed provider requests count toward the limit. No payments, calls, edits, or emails can be initiated by the assistant.
+`AUTOPAY_CHAT_MODE` defaults to `testing`. Only the exact server value `openai` can enable paid provider calls; supplying a key alone does not activate them, and clients cannot override the mode. The live testing deployment sets `AUTOPAY_CHAT_MODE=testing`. Keep this value for testing.
+
+Optional paid integration retained for later: explicitly set `AUTOPAY_CHAT_MODE=openai` and configure `OPENAI_API_KEY` as a server secret using the OpenAI Developers secure flow, then redeploy. This incurs OpenAI usage charges. It uses the Responses API with `store: false`, default model `gpt-5-mini` (`OPENAI_MODEL` can override). Keys must never be put in browser code, chat messages, source, or public environment variables. Paid mode limits usage to 30 questions per business per hour and 200 site-wide per UTC day, with details capped at 200 invoices/clients. Automated provider tests use mocks. Testing mode has no paid-provider usage counters.
