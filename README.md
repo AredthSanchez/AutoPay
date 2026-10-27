@@ -1,8 +1,6 @@
 # AutoPay source snapshot
 
-The complete project is in **AutoPay-source.zip**, including its original directory structure. Credentials, local databases, uploads, and generated dependencies are excluded.
-
-To open the source after cloning this repository:
+The complete project is in `AutoPay-source.zip`, including its original directory structure. Credentials, local databases, uploads, and generated dependencies are excluded.
 
 ```sh
 unzip AutoPay-source.zip
@@ -10,11 +8,9 @@ cd autopay
 npm ci
 ```
 
-The hosted application is at https://aredth-autopay.primeswift1.chatgpt.site/.
+Live application: https://aredth-autopay.primeswift1.chatgpt.site/
 
-The source is archived here because the connected GitHub integration does not currently have write access to this new private repository. Extract the ZIP to work with the normal source tree.
-
----
+This archive includes the AutoPay Assistant integration. AI answers require an OpenAI API key configured as a server secret. The source is archived here; extract the ZIP to work with the normal source tree.
 
 # AutoPay — Business invoice workspace
 
@@ -41,6 +37,7 @@ npm ci
 npm run build
 node --import ./scripts/sites-env.mjs ./node_modules/wrangler/bin/wrangler.js d1 execute DB --local --config dist/server/wrangler.json --persist-to .wrangler/state --file drizzle/0000_friendly_johnny_storm.sql
 node --import ./scripts/sites-env.mjs ./node_modules/wrangler/bin/wrangler.js d1 execute DB --local --config dist/server/wrangler.json --persist-to .wrangler/state --file drizzle/0001_lethal_madame_masque.sql
+node --import ./scripts/sites-env.mjs ./node_modules/wrangler/bin/wrangler.js d1 execute DB --local --config dist/server/wrangler.json --persist-to .wrangler/state --file drizzle/0002_lethal_fixer.sql
 npm run dev -- --port 5180
 ```
 
@@ -78,3 +75,11 @@ Tests cover shared membership, cross-business access rejection, origin/CSRF chec
 `backend/`, `frontend/`, `Dockerfile`, and `compose.yaml` retain the earlier Java Spring Boot / MySQL reference implementation. It is a single-workspace local portfolio app, not the hosted multi-business auth backend. Its Twilio hooks are not connected to the hosted cloud application. Do not expose it as a multi-business production service without adding equivalent membership authorization. The previous executable JAR is a legacy build.
 
 The hosted app supports payment simulations and manual bookkeeping, but it does not place real payment calls or charge money. Live payments require a separately configured provider/backend integration. No account passwords are stored by AutoPay.
+
+### AutoPay Assistant
+
+Open **Assistant** in the workspace sidebar to ask questions about invoices, overdue balances, or clients. Requests use the OpenAI Responses API from the server; the browser never receives the key. The default model is `gpt-5-mini` (override with the server variable `OPENAI_MODEL`).
+
+To activate the published assistant, use the OpenAI Developers secure key setup flow, then set `OPENAI_API_KEY` as a **secret** in this Site's production runtime environment and redeploy. Never put the key in source, the chat box, or a `VITE_`/public environment variable. Local development can use an ignored `.dev.vars` file with the same key name. API billing and model access must be enabled in the selected OpenAI project.
+
+The assistant is read-only and checks business membership for every request. It excludes bank details, notes, check references, attachments, contact emails and phone numbers from its automatically supplied context. Questions and selected invoice/client data are sent to OpenAI, with `store: false`. Conversation history stays in component memory and clears when leaving the Assistant page or switching businesses. Shared usage is capped at 30 requests per business per hour and 200 across the site per UTC day. Configure an OpenAI project spending limit as an additional billing control. Snapshots cover at most 1,000 invoices and clients; exact server-calculated totals cover that snapshot and details are limited to the first 200 records of each type. Larger workspaces return a clear size error. Failed provider requests count toward the limit. No payments, calls, edits, or emails can be initiated by the assistant.
