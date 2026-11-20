@@ -1,0 +1,36 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "autopay",
+  "main": "worker/index.mjs",
+  "compatibility_date": "2026-05-15",
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
+  "assets": {
+    "directory": "./dist/client",
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": [
+      "/api/*"
+    ]
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "autopay",
+      "database_id": "5f31508c-a351-4fa2-bed9-7a86cb2c6aec",
+      "migrations_dir": "drizzle"
+    }
+  ],
+  "vars": {
+    "AUTOPAY_CHAT_MODE": "testing",
+    "SUPABASE_URL": "https://mlekcbzvlczukfnocfpg.supabase.co",
+    "SUPABASE_PUBLISHABLE_KEY": "sb_publishable_B5Hs0UyABYPv-rQ4qYz1Hg_ga1S6f-8"
+  },
+  "observability": {
+    "enabled": true
+  },
+  "account_id": "35d668e1acec6f2f41e54f80a036cf4f",
+  "workers_dev": true,
+  "preview_urls": false
+}

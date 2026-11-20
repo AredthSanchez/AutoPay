@@ -1,0 +1,10 @@
+# Copy to .dev.vars (ignored). Only public Supabase project values go below.
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_PUBLISHABLE_KEY=sb_publishable_your_key
+AUTOPAY_CHAT_MODE=testing
+# Generate a fresh 32-byte base64 encryption key for a NEW database.
+# For imported encrypted bank records, preserve their ORIGINAL key.
+BANK_DATA_KEY=
+# Optional invoice alerts; use production secrets through wrangler secret put.
+RESEND_API_KEY=
+MAIL_FROM_EMAIL=
