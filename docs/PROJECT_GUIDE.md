@@ -105,6 +105,9 @@ The normal source tree at the repository root is the active application. `AutoPa
 | [app/workspace/style.css](../app/workspace/style.css) | Workspace branding, tables, responsive navigation, forms, centered dialogs, printing, and assistant styles. |
 | [app/workspace/api.js](../app/workspace/api.js) | API request helper, token provider, selected-business header, invoice/client operations, and attachment upload/download. |
 | [app/workspace/workspace-refresh.css](../app/workspace/workspace-refresh.css) | Workspace visual hierarchy, responsive toolbar, compact table, contextual bulk actions, and mobile presentation. |
+| [app/clearable-select.jsx](../app/clearable-select.jsx) | Reusable dropdown with an explicit clear/reset control and required-field placeholder. |
+| [app/report-settings.jsx](../app/report-settings.jsx) | Owner-managed report recipient, schedule, saved delivery time, manual send, and history/retry UI. |
+| [lib/autopay/reports.mjs](../lib/autopay/reports.mjs) | Timezone-aware schedule calculation, scoped report generation, durable outbox, leases, retries, and Resend delivery. |
 | [app/workspace/excel.js](../app/workspace/excel.js) | Creates an Excel OOXML workbook and downloads it without an external API or runtime spreadsheet dependency. |
 | [app/workspace/domain.js](../app/workspace/domain.js) | Money validation, line-item totals, derived overdue status, dates, aging, filter matching, search matching, and a retained sample-data helper. |
 | [app/business-settings.jsx](../app/business-settings.jsx) | Account/business profile forms, team listing, invitation-link creation, notification preferences, notification status, and retry controls. |
@@ -373,7 +376,7 @@ When alerts are enabled, invoice creation batches the invoice, missing-client in
 
 The provider request has a timeout and a notification-specific idempotency key. A previously `SENT` alert is not resent by the normal retry route.
 
-There is no scheduled retry worker or delivery/bounce webhook in the current app. Owners retry eligible alerts in Settings. A delivery interrupted while marked `SENDING` may need administrative reconciliation after checking the provider. When alerts are enabled, a business limit of 30 newly recorded notifications per rolling hour can reject further invoice creation with `429`.
+Invoice-creation alerts have no scheduled retry worker or delivery/bounce webhook. Owners retry eligible invoice alerts in Settings. Scheduled business reports use a separate background outbox described below. A delivery interrupted while marked `SENDING` may need administrative reconciliation after checking the provider. When alerts are enabled, a business limit of 30 newly recorded notifications per rolling hour can reject further invoice creation with `429`.
 
 The configured Resend test-recipient restriction must remain until a verified sender/domain supports the intended recipients. Supabase confirmation/reset mail needs its own SMTP configuration even when invoice alerts already work through Resend.
 
@@ -419,7 +422,7 @@ No assistant mode has tools to edit records, send reminders, call clients, colle
 
 ## Database tables and migrations
 
-There are 12 application tables after the current migrations. Wrangler also tracks applied migrations separately. Several operational tables use the column name `owner` for their **business ID**.
+There are 14 application tables after the current migrations. Wrangler also tracks applied migrations separately. Several operational tables use the column name `owner` for their **business ID**.
 
 | Table | Main fields | Purpose |
 | --- | --- | --- |
@@ -434,6 +437,8 @@ There are 12 application tables after the current migrations. Wrangler also trac
 | `ai_usage` | `business`, `hour`, `requests` | Paid-provider usage counters. The site-wide daily counter uses a reserved key/date. |
 | `legacy_identity_links` | `email`, `old_user_id`, `claimed_by` | Explicit mapping used to adopt imported accounts after verified email login. |
 | `file_objects` | `key`, `size`, `chunks` | D1 file object metadata. |
+| `report_schedules` | `business`, recipient, enabled, frequency, local time/timezone/weekday, next UTC run, updated timestamp | One report schedule per business. |
+| `report_runs` | `id`, business, recipient, scheduled time, payload, status, attempts, lease/retry timestamps, error/provider ID | Durable scheduled and manually requested report outbox. |
 | `file_chunks` | `key`, `sequence`, `data` | Ordered binary file chunks; composite primary key. |
 
 Primary business relationships are accounts → memberships → businesses, businesses → clients/invoices, and invoices → attachment/notification records. The application enforces many of these relationships in its queries rather than relying on a complete set of SQL foreign keys.
@@ -447,6 +452,7 @@ Invoice and client JSON keep the app's flexible field structures, while indexed 
 | [0002_lethal_fixer.sql](../drizzle/0002_lethal_fixer.sql) | Assistant usage counters and their unique index. |
 | [0003_independent_identity.sql](../drizzle/0003_independent_identity.sql) | Imported identity mapping. |
 | [0004_database_files.sql](../drizzle/0004_database_files.sql) | D1 object and binary-chunk tables. |
+| [0006_scheduled_reports.sql](../drizzle/0006_scheduled_reports.sql) | Business report schedules, durable delivery history, and due/pending indexes. |
 | [0005_bank_migration.sql](../drizzle/0005_bank_migration.sql) | Bank-record re-entry flag. |
 
 Apply migrations in order using Wrangler. Do not edit already-applied migrations to change an existing database; add a new migration and preserve the prior history. These are D1 migrations, not Supabase Postgres migrations.
@@ -607,10 +613,11 @@ Back up the D1 database and encryption key before migrations or key/storage chan
 
 ## Tests and verification
 
-The current source has **31 automated tests** across five test files:
+The current source has **39 automated tests** across six test files:
 
 | Test file | Main coverage |
 | --- | --- |
+| `tests/reports.test.mjs` | Schedule validation/timezone/DST, owner permissions, report isolation/privacy, idempotency, retries/expiry, leases, cancellation, and attachment counts. |
 | `tests/excel.test.mjs` | OOXML structure, numeric amounts, leading-zero references, formula-safe text, attention flags, and empty exports. |
 | `tests/domain.test.js` | Cent-based totals, invalid line items, aging, paid-date anchoring, inclusive filters, and scoped loaded-record search. |
 | `tests/business-isolation.test.mjs` | Shared business membership, email-bound invitations, cross-business rejection, origin/marker checks, attachment scoping, email outbox/provider idempotency, bank encryption/owner access, assistant setup/limits/errors, testing reports, and zero outbound provider calls in testing mode. |
@@ -649,7 +656,7 @@ Important practical boundaries are:
 - D1 chunk storage is intended for small testing workspaces and consumes database quotas.
 - No scheduled backups, automated offsite recovery, account deletion flow, member revocation UI, or owner-transfer workflow is implemented here.
 - No realtime subscription keeps every browser current automatically.
-- Notification status is not a delivery receipt. There is no background retry scheduler.
+- Notification status is not a delivery receipt. Invoice alerts require manual retries; scheduled reports have a separate leased background retry worker.
 - Testing reports support a bounded set of questions and record counts.
 - Paid OpenAI mode is deliberately disabled; external provider/storage/mail plans have their own allowances and billing independently of this flag.
 - Manual payment statuses and simulations do not execute financial transactions.
@@ -712,7 +719,7 @@ The source-linked behavior above describes this repository. Provider interfaces,
 
 ### Brand assets
 
-[public/autopay-logo.svg](../public/autopay-logo.svg) is the AutoPay mark: a white A on a green rounded tile with a lime payment check. The same vector asset is used on authentication pages, in the workspace, and as the browser favicon.
+[public/autopay-logo.svg](../public/autopay-logo.svg) is the AutoPay mark: a white A on a blue rounded tile with a light-blue payment check. The same vector asset is used on authentication pages, in the workspace, and as the browser favicon.
 
 ### Invoice productivity tools and refreshed workspace
 
@@ -720,7 +727,7 @@ The invoice toolbar offers quick views for all invoices, overdue open invoices, 
 
 Pagination offers 10, 25, or 50 rows. The header checkbox selects or deselects the current page; checked invoices can accumulate across pages within the current filtered list. Bulk actions and selected Excel exports apply across those selected pages. With no selection, export includes the entire filtered list. The footer shows the current range and total value of the filtered invoices, including paid and void records if present; it is not an outstanding-balance metric.
 
-The compact table initially shows selection, attention, client/invoice, due date, amount, and status. **Show payment columns** reveals payment date, aging, and payment method/check reference without changing the exported workbook. A refresh button reloads business records. The color legend is collapsible, and bulk controls appear only after selection. A sticky header preserves search and logout access; the mobile invoice table scrolls within its own container.
+The compact table initially shows selection, attention, client/invoice, due date, amount, notes, attachments, and status. **Show payment columns** reveals payment date, aging, and payment method/check reference without changing the exported workbook. A refresh button reloads business records. The color legend is collapsible, and bulk controls appear only after selection. A sticky header preserves search and logout access; the mobile invoice table scrolls within its own container.
 
 **Duplicate** in invoice details opens a new editable invoice draft. It copies client contact details, invoice notes, and line items, and defaults the due date to 14 days ahead. It does not copy the invoice ID/number, status, payment metadata, flags, attachments, or timeline. Nothing is created until the user submits the draft; the normal invoice-creation alert behavior then applies.
 
@@ -729,3 +736,35 @@ The overview’s **Next up** queue shows up to three open invoices that are flag
 **Record payment** is available only when all checked invoices are open. Its centered form asks for a payment date, non-demo payment method, and a check reference when appropriate. The same metadata applies to all selected invoices. `POST /api/invoices/:id/record-payment` validates this information, requires membership in the invoice business, uses the invoice version check, records an audit event, and marks the record paid. It does not transfer funds or contact a payment processor. Already-paid or void invoices return a conflict rather than silently overwriting payment information. **Void selected** also requires open invoices and an explicit confirmation; it reuses the existing scoped void endpoint. Both operations report partial failures with unsuccessful invoices retained for retry.
 
 The test suite covers quick-view boundaries, stable sorting, independent duplicate drafts, payment validation, cross-business rejection, and prevention of payment overwrite in addition to the prior coverage. Browser QA uses isolated sample records; it does not create, pay, void, or delete production invoices.
+
+### Blue theme, clearable dropdowns, and invoice row documents
+
+The workspace, authentication pages, and SVG logo use a blue palette. Product-owned text uses plain hyphens or explicit missing-value labels instead of em dashes. Existing generated timeline entries are normalized for display; user-entered notes and files are not rewritten.
+
+Each editable dropdown has a clear button. Filters reset to all invoices, sorting resets to newest first, and row count resets to 10. Form dropdowns clear to an empty choice and retain required-field validation. The active business workspace remains selected because it determines authorization scope. Report timezone uses an editable IANA timezone input with suggestions.
+
+Invoice rows always include note previews and attachment controls. Clicking notes opens the existing notes editor; clicking attachments opens the existing upload/download/removal manager. Both use centered dialogs and return to the table. Attachment counts are computed by the server using the business/invoice attachment index, rather than trusting client-supplied counts. Exported invoice notes remain included in Excel; attached file contents are not embedded in the workbook.
+
+### Scheduled report configuration, delivery, and limits
+
+Business owners configure **Settings > Scheduled email reports**, including a recipient, daily or weekly frequency, delivery time in 15-minute increments, timezone, weekday for weekly reports, and enabled flag. New schedules are disabled until the owner saves an enabled configuration. The default recipient is the business notification inbox when present, otherwise the signed-in email. The default time is 09:00 in America/Denver. Clearing the recipient is allowed when pausing reports; invalid required schedule values must be corrected before saving. The displayed next delivery refers to the saved schedule, even while edits are unsaved.
+
+A Cloudflare Cron Trigger invokes the Worker's `scheduled` handler every 15 minutes (`*/15 * * * *` UTC). The app translates each business's local schedule to its next UTC timestamp. Nonexistent local times during a daylight-saving jump are skipped; a repeated local hour is sent at most once for that local date. If a scheduled run is delayed, it produces one current summary and advances to the next future occurrence instead of sending every missed historical period.
+
+Reports contain current workspace invoice/client counts, outstanding/recorded-paid/overdue totals, attention flags, upcoming open invoices, and up to five client names with the highest outstanding balances. They describe a current snapshot, not activity only within that day or week. Deleted invoices are excluded. Bank information, contact details, notes, and file contents are excluded. Summary queries are explicitly scoped to one business and totals use rounded cents.
+
+Scheduled report IDs combine business and local delivery date. Transactional insert/advance checks prevent duplicate scheduled outbox rows after concurrent invocations or schedule edits. Each send claims a five-minute lease, uses one stable Resend idempotency key, and records a provider ID/error/status. The cron processes at most 20 due schedules and 20 pending sends per invocation, retries failed/pending-setup sends every 15 minutes up to five attempts, and stops retrying an uncertain report after 24 hours. Owners can retry eligible reports from history within that safety window or request a fresh report. Saving changed/paused schedules cancels queued non-sending scheduled reports; a send already in flight cannot be recalled. Existing invoice alert delivery remains separate.
+
+Reports use the existing server-only `RESEND_API_KEY`, `MAIL_FROM_EMAIL`, and optional `RESEND_TEST_RECIPIENT`. The test-recipient restriction is enforced, and missing sender configuration is visible as `PENDING_SETUP`. `SENT` means accepted by Resend, not guaranteed inbox placement. Manual report requests are limited to three per business per rolling hour. No test or scheduled email is sent during automated/browser QA; provider calls are mocked. Production delivery requires an enabled schedule and a usable sender/recipient.
+
+API routes, all requiring the normal authenticated business scope:
+
+| Route | Behavior |
+| --- | --- |
+| `GET /api/report-settings` | Read the business schedule, next delivery, sender readiness, and owner capability. |
+| `POST /api/report-settings` | Owner-only validation/upsert, next-run computation, and queued scheduled report cancellation. |
+| `POST /api/report-settings/send` | Owner-only immediate report using saved recipient/timezone, with hourly rate limit. |
+| `GET /api/reports` | Read the most recent 20 report delivery records for the current business. |
+| `POST /api/reports/:id/retry` | Owner-only retry of an eligible report belonging to the current business. |
+
+Apply migration `0006_scheduled_reports.sql` before deploying the new Worker. The handler is invoked by Cloudflare scheduled events; there is no public HTTP trigger. New Cloudflare cron settings may take up to 15 minutes to propagate. See the [Cloudflare Cron Trigger documentation](https://developers.cloudflare.com/workers/configuration/cron-triggers/).

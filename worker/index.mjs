@@ -1,3 +1,4 @@
+import {runScheduledReports} from '../lib/autopay/reports.mjs';
 import {DatabaseFiles} from './database-files.mjs';
 import {serve} from '../lib/autopay/service.mjs';
 import {authConfig,authenticatedUser,adoptMigratedIdentity,AuthUnavailable} from './auth.mjs';
@@ -15,4 +16,4 @@ export async function handle(request,env){
  }else response=await env.ASSETS.fetch(request);
  return secure(response,env);
 }
-export default {fetch:handle};
+export default {fetch:handle,async scheduled(controller,env,ctx){ctx.waitUntil(runScheduledReports(env.DB,env).then(result=>console.log('Scheduled reports processed',result)))}};

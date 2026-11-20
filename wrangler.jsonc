@@ -32,5 +32,10 @@
   },
   "account_id": "35d668e1acec6f2f41e54f80a036cf4f",
   "workers_dev": true,
-  "preview_urls": false
+  "preview_urls": false,
+  "triggers": {
+    "crons": [
+      "*/15 * * * *"
+    ]
+  }
 }

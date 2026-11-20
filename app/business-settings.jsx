@@ -1,8 +1,9 @@
 'use client';
 import React,{useEffect,useState} from 'react';
+import ReportSettings from './report-settings';
 import {request} from './workspace/api';
 import {Users,Mail,Plus,Copy,RefreshCw,CheckCircle2,Clock,AlertCircle} from 'lucide-react';
-export default function BusinessSettings({business,account}){const[team,setTeam]=useState(null),[settings,setSettings]=useState(null),[notices,setNotices]=useState([]),[target,setTarget]=useState(''),[link,setLink]=useState(''),[busy,setBusy]=useState(false),[message,setMessage]=useState(''),[error,setError]=useState('');async function load(){try{const[t,s,n]=await Promise.all([request('/team'),request('/notification-settings'),request('/notifications')]);setTeam(t);setSettings(s);setNotices(n)}catch(e){setError(e.message)}}useEffect(()=>{load()},[business.id]);async function run(fn,success){setBusy(true);setError('');setMessage('');try{await fn();setMessage(success);await load()}catch(e){setError(e.message)}finally{setBusy(false)}}return <section className="business-settings"><BusinessProfile business={business} account={account}/>
+export default function BusinessSettings({business,account}){const[team,setTeam]=useState(null),[settings,setSettings]=useState(null),[notices,setNotices]=useState([]),[target,setTarget]=useState(''),[link,setLink]=useState(''),[busy,setBusy]=useState(false),[message,setMessage]=useState(''),[error,setError]=useState('');async function load(){try{const[t,s,n]=await Promise.all([request('/team'),request('/notification-settings'),request('/notifications')]);setTeam(t);setSettings(s);setNotices(n)}catch(e){setError(e.message)}}useEffect(()=>{load()},[business.id]);async function run(fn,success){setBusy(true);setError('');setMessage('');try{await fn();setMessage(success);await load()}catch(e){setError(e.message)}finally{setBusy(false)}}return <section className="business-settings"><BusinessProfile business={business} account={account}/><ReportSettings business={business}/>
 <div className="panel activitypanel">
 <span className="eyebrow">BUSINESS WORKSPACE</span>
 <h3 style={{marginTop:12}}>{business.name}</h3>

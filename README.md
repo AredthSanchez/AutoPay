@@ -10,6 +10,8 @@ For a complete explanation of the architecture, every source module, database ta
 
 - Supabase email/password signup and login, email verification, password recovery and logout.
 - Business owner/member roles, verified-email team invitations and shared business workspaces.
+- Scheduled daily/weekly email reports with timezone settings, delivery history, and retries.
+- Blue theme, clearable dropdowns, and per-row invoice notes/attachments.
 - Editable invoices, statuses, dates, payment methods/check references, notes, filters, Excel export, attention flags, bulk selection/actions, sorting, quick views, pagination, duplicate drafts, manual payment recording, and restorable Trash.
 - Client profiles, business addresses and owner-only encrypted bank instructions.
 - Invoice attachments stored in chunked D1 records for this testing version: 5 MB per file, 10 files and 25 MB per invoice. R2 is optional for future scale; no R2 subscription is required now.
