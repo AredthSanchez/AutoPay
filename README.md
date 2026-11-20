@@ -4,6 +4,8 @@ Live app: https://autopay.aredthsanchez.workers.dev/
 
 A shared business invoice workspace with individual email/password accounts. The app runs directly in your Cloudflare account; Supabase handles identity. No ChatGPT login or Sites hosting runtime is required.
 
+For a complete explanation of the architecture, every source module, database tables, API routes, deployment, tests, and limitations, read the [Complete Project Guide](docs/PROJECT_GUIDE.md).
+
 ## Features
 
 - Supabase email/password signup and login, email verification, password recovery and logout.
