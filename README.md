@@ -1,24 +1,10 @@
-# AutoPay source snapshot
-
-The complete project is in `AutoPay-source.zip`, including its original directory structure. Credentials, local databases, uploads, and generated dependencies are excluded.
-
-```sh
-unzip AutoPay-source.zip
-cd autopay
-npm ci
-```
-
-Live application: https://aredth-autopay.primeswift1.chatgpt.site/
-
-This archive includes free AutoPay Assistant testing mode. It calculates common invoice/client reports without an OpenAI key or OpenAI API charges. Paid provider mode is disabled by default. The source is archived here; extract the ZIP to work with the normal source tree.
-
 # AutoPay — Business invoice workspace
 
 Individual logins. Shared business invoices, clients, payments, and files.
 
-## Current hosted application
+## Standalone application
 
-The published app uses React/Vinext on Cloudflare Workers, D1 for business records, R2 for invoice files, and platform-managed ChatGPT sign-in. Public visitors can create a business or join an email-bound team invitation. Each request verifies business membership server-side. The owner manages business information, invitations, bank details, and invoice-alert settings.
+AutoPay uses React and Vinext on Cloudflare Workers, D1 for business records, R2 for invoice files, and Supabase Auth for passwordless email sign-in. Public visitors can create a business or join an email-bound team invitation. Each request verifies business membership server-side. The owner manages business information, invitations, bank details, and invoice-alert settings.
 
 Features:
 - Sign-up, login, logout, multiple business workspaces, owner/member roles.
@@ -30,18 +16,37 @@ Features:
 
 ## Run locally
 
-Requires Node 22.13+ and npm. The hosting integration uses the Sites execution profile and native D1/R2 bindings.
+Use Node 22.13+ and npm.
+
+1. Create a Supabase project and enable the Email provider and new user sign-ups. In the Authentication email templates, include `{{ .Token }}` in **Magic Link** and **Confirm signup** so both new and returning users receive a code. Configure [custom SMTP](https://supabase.com/docs/guides/auth/auth-smtp) before testing with email addresses outside the Supabase project team.
+2. Copy `.dev.vars.example` to `.dev.vars`. Fill in the project URL and the publishable key from Supabase.
+3. Install dependencies, apply the local D1 migrations, and run the app.
 
 ```sh
 npm ci
-npm run build
-node --import ./scripts/sites-env.mjs ./node_modules/wrangler/bin/wrangler.js d1 execute DB --local --config dist/server/wrangler.json --persist-to .wrangler/state --file drizzle/0000_friendly_johnny_storm.sql
-node --import ./scripts/sites-env.mjs ./node_modules/wrangler/bin/wrangler.js d1 execute DB --local --config dist/server/wrangler.json --persist-to .wrangler/state --file drizzle/0001_lethal_madame_masque.sql
-node --import ./scripts/sites-env.mjs ./node_modules/wrangler/bin/wrangler.js d1 execute DB --local --config dist/server/wrangler.json --persist-to .wrangler/state --file drizzle/0002_lethal_fixer.sql
+npx wrangler d1 migrations apply autopay-db --local
 npm run dev -- --port 5180
 ```
 
-Apply each migration once. Portable local development uses the starter's loopback-only mock sign-in. Production authentication is owned by Sites dispatch; never trust identity headers from an untrusted reverse proxy on another hosting platform.
+Open `http://localhost:5180`. Create an account using the email code, then create a business workspace. To test invitations, use a second browser profile and sign in with the invited email address.
+
+## Deploy to your Cloudflare account
+
+1. Authenticate Wrangler with `npx wrangler login`. Create your resources using `npx wrangler d1 create autopay-db` and `npx wrangler r2 bucket create autopay-files`.
+2. Update `wrangler.jsonc` with the database ID Cloudflare returned. Keep the binding names `DB` and `BUCKET`.
+3. Build and publish the Worker, then configure the sign-in settings. Run the migration from the root config so Wrangler uses the source migration directory.
+
+```sh
+npx wrangler d1 migrations apply autopay-db --remote --config wrangler.jsonc
+npm run build
+npm run deploy
+npx wrangler secret put SUPABASE_URL
+npx wrangler secret put SUPABASE_PUBLISHABLE_KEY
+```
+
+Test sign-up, sign-in, sign-out, and team invitations on the Worker URL. You can then add your own subdomain under the Worker's **Settings → Domains & Routes**.
+
+This setup starts with an empty database and bucket. To carry over an existing Sites workspace, first confirm access to a database and attachment export. Plan how to map old account IDs to the new sign-ins and preserve business memberships. Encrypted bank fields require the original `BANK_DATA_KEY`.
 
 ## Runtime secrets
 
@@ -56,7 +61,7 @@ Full bank details never appear in client-list responses, search, exports, or not
 
 ## Team and email workflow
 
-1. Sign up with ChatGPT and create your business.
+1. Sign up with your email address and create your business.
 2. Open Settings to edit your display name, business owner name, contact details, and business address.
 3. Create an invitation for a teammate's email and share its expiring link. They sign in individually with that exact email and join the shared business.
 4. Set the new-invoice notification recipient in Settings. Every team member's newly created invoice creates a durable alert and attempts delivery.
@@ -66,9 +71,11 @@ Full bank details never appear in client-list responses, search, exports, or not
 
 ```sh
 node --test tests/business-isolation.test.mjs frontend/src/domain.test.js
+npm run build
+node --test tests/worker-auth.test.mjs
 ```
 
-Tests cover shared membership, cross-business access rejection, origin/CSRF checks, scoped attachments, encrypted bank records, durable email alerts, idempotent delivery retries, financial totals, aging, filters, and search. Provider calls in automated tests are mocked.
+Tests cover shared membership, cross-business access rejection, origin/CSRF checks, scoped attachments, encrypted bank records, durable email alerts, idempotent delivery retries, financial totals, aging, filters, and search. The Worker authentication test also checks email code verification, session cookies, workspace creation, and logout with a mocked Supabase service.
 
 ## Earlier Java portfolio implementation
 
@@ -82,6 +89,6 @@ Open **Assistant** in the workspace sidebar. The default mode calculates summari
 
 Membership is checked on every request. Bank fields, notes, check references, contact emails/phones, and files are excluded from chat context. Summaries read current, non-deleted business records, up to 1,000 invoices and clients; lists show 10 rows and explain omissions. Conversation history stays in component memory and clears when leaving the Assistant page or switching businesses. No payments, calls, edits, or emails can be initiated by the assistant. Normal app hosting/storage usage is separate from OpenAI API billing.
 
-`AUTOPAY_CHAT_MODE` defaults to `testing`. Only the exact server value `openai` can enable paid provider calls; supplying a key alone does not activate them, and clients cannot override the mode. The live testing deployment sets `AUTOPAY_CHAT_MODE=testing`. Keep this value for testing.
+`AUTOPAY_CHAT_MODE` defaults to `testing`. Only the exact server value `openai` can enable paid provider calls; supplying a key alone does not activate them, and clients cannot override the mode. You can explicitly set `AUTOPAY_CHAT_MODE=testing` for development.
 
-Optional paid integration retained for later: explicitly set `AUTOPAY_CHAT_MODE=openai` and configure `OPENAI_API_KEY` as a server secret using the OpenAI Developers secure flow, then redeploy. This incurs OpenAI usage charges. It uses the Responses API with `store: false`, default model `gpt-5-mini` (`OPENAI_MODEL` can override). Keys must never be put in browser code, chat messages, source, or public environment variables. Paid mode limits usage to 30 questions per business per hour and 200 site-wide per UTC day, with details capped at 200 invoices/clients. Automated provider tests use mocks. Testing mode has no paid-provider usage counters.
+Optional paid integration retained for later: explicitly set `AUTOPAY_CHAT_MODE=openai` and configure `OPENAI_API_KEY` as a Worker secret. This incurs OpenAI usage charges. It uses the Responses API with `store: false`, default model `gpt-5-mini` (`OPENAI_MODEL` can override). Keys must never be put in browser code, chat messages, source, or public environment variables. Paid mode limits usage to 30 questions per business per hour and 200 site-wide per UTC day, with details capped at 200 invoices/clients. Automated provider tests use mocks. Testing mode has no paid-provider usage counters.

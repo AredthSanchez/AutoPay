@@ -1,0 +1,41 @@
+services:
+  mysql:
+    image: mysql:8.4
+    environment:
+      MYSQL_DATABASE: autopay
+      MYSQL_USER: autopay
+      MYSQL_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in .env}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?Set MYSQL_ROOT_PASSWORD in .env}
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost --silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+  app:
+    build: .
+    ports:
+      - "127.0.0.1:8080:8080"
+    volumes:
+      - attachment-data:/app/uploads
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      UPLOAD_DIRECTORY: /app/uploads
+      SPRING_PROFILES_ACTIVE: mysql
+      DB_URL: jdbc:mysql://mysql:3306/autopay
+      DB_USER: autopay
+      DB_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in .env}
+      AUTOPAY_USERNAME: ${AUTOPAY_USERNAME:-admin}
+      AUTOPAY_PASSWORD: ${AUTOPAY_PASSWORD:?Set AUTOPAY_PASSWORD in .env}
+      AUTOPAY_LIVE: ${AUTOPAY_LIVE:-false}
+      PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:-}
+      TWILIO_ACCOUNT_SID: ${TWILIO_ACCOUNT_SID:-}
+      TWILIO_AUTH_TOKEN: ${TWILIO_AUTH_TOKEN:-}
+      TWILIO_FROM_NUMBER: ${TWILIO_FROM_NUMBER:-}
+      TWILIO_PAY_CONNECTOR: ${TWILIO_PAY_CONNECTOR:-}
+volumes:
+  mysql-data:
+  attachment-data:

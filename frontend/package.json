@@ -1,0 +1,1 @@
+{"name":"autopay-workspace","version":"1.0.0","private":true,"type":"module","scripts":{"dev":"vite --host 127.0.0.1","build":"vite build","test":"node --test src/domain.test.js"},"dependencies":{"react":"19.0.0","react-dom":"19.0.0","lucide-react":"0.468.0"},"devDependencies":{"vite":"6.1.0","@vitejs/plugin-react":"4.3.4","tailwindcss":"4.0.9","@tailwindcss/vite":"4.0.9"}}

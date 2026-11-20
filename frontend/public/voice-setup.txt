@@ -1,0 +1,48 @@
+AUTOPAY — LIVE VOICE PAYMENT SETUP
+
+1. Deploy the included Docker app and MySQL database on a container host.
+   Serve both the frontend and API from the Java app, over HTTPS.
+   The private Sites preview is browser-only and does not place calls.
+
+2. Create a Twilio account and obtain a voice-capable phone number.
+   https://www.twilio.com/console
+
+3. Configure a Twilio Pay connector and the payment processor.
+   Follow Twilio's account and PCI setup requirements; start with test mode.
+   https://www.twilio.com/docs/voice/twiml/pay
+
+4. Set secrets in your server's environment settings. Never paste secrets into
+   the browser, GitHub, screenshots, or support chat:
+   AUTOPAY_USERNAME=admin
+   AUTOPAY_PASSWORD=<long unique password>
+   DB_PASSWORD=<database password>
+   PUBLIC_BASE_URL=https://<your-java-backend-origin>
+   TWILIO_ACCOUNT_SID=AC<your account SID>
+   TWILIO_AUTH_TOKEN=<your auth token>
+   TWILIO_FROM_NUMBER=+1<your Twilio phone number>
+   TWILIO_PAY_CONNECTOR=<your configured connector name>
+   AUTOPAY_LIVE=false
+
+5. Deploy with the included compose.yaml / Dockerfile.
+   Keep /webhooks/voice/* reachable by Twilio without HTTP Basic login.
+   Signed callbacks are verified by the application.
+   https://www.twilio.com/docs/usage/webhooks/webhooks-security
+
+6. Verify the provider configuration using test credentials/payment methods
+   supported by your connector. Then set AUTOPAY_LIVE=true and restart.
+   Log in at /api/session, then open the workspace and Settings.
+   Readiness reflects configuration presence, not provider verification.
+
+7. Create a client using an international phone number, then an unpaid invoice.
+   Click Call client to collect payment. Confirm the phone number and amount,
+   obtain permission from the recipient, and place the call only when ready.
+   Calls can cost money. Successful provider payments can charge the client.
+   The client enters payment details in Twilio Pay, not in AutoPay.
+
+8. Watch the invoice timeline. Only a signed, matching payment success callback
+   marks the invoice paid. A completed call alone does not mark it paid.
+   Ambiguous outbound network outcomes are blocked from automatic retry.
+   Reconcile these attempts in the Twilio dashboard before taking further action.
+
+Credentials and payment-provider setup are required; this guide does not
+activate a provider account, create a phone number, or enable live charges.
