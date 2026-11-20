@@ -10,7 +10,7 @@ For a complete explanation of the architecture, every source module, database ta
 
 - Supabase email/password signup and login, email verification, password recovery and logout.
 - Business owner/member roles, verified-email team invitations and shared business workspaces.
-- Editable invoices, statuses, dates, payment methods/check references, notes, filters, CSV export and restorable Trash.
+- Editable invoices, statuses, dates, payment methods/check references, notes, filters, Excel export, attention flags, bulk selection/actions, and restorable Trash.
 - Client profiles, business addresses and owner-only encrypted bank instructions.
 - Invoice attachments stored in chunked D1 records for this testing version: 5 MB per file, 10 files and 25 MB per invoice. R2 is optional for future scale; no R2 subscription is required now.
 - Free rule-based invoice/client assistant. `AUTOPAY_CHAT_MODE=testing` makes no OpenAI calls.

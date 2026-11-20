@@ -75,3 +75,18 @@ test('free reports calculate status filters, named clients, rankings and follow-
  const named=ask('Summarize Alpha');assert.match(named,/2 invoices/);assert.equal(named.includes('INV-300'),false);
  const follow=testingAnswer(context,[{role:'user',content:'Summarize Alpha'},{role:'assistant',content:named},{role:'user',content:'And paid invoices?'}]);assert.match(follow,/Paid invoices: 1/);assert.equal(follow.includes('INV-300'),false);assert.match(ask('Show INV-100'),/Payment method/);assert.match(ask('Show bank account number'),/not available/);assert.match(ask('delete all invoices'),/read-only/);assert.match(ask('weather tomorrow'),/common invoice and client reports/);assert.match(ask('invoices due next week'),/not supported/);
 });
+
+test('attention flags persist, survive editing and trash restore, and remain business scoped',async()=>{
+ const {call,sqlite}=setup();try{const a=await register(call,owner,'Flagged Business'),b=await register(call,other,'Other Business');
+ const i=await (await call(owner,'/invoices',{business:a,method:'POST',body:draft})).json();
+ assert.equal((await call(other,'/invoices/'+i.id+'/flag',{business:b,method:'POST',body:{flagged:true}})).status,404);
+ assert.equal((await call(owner,'/invoices/'+i.id+'/flag',{business:a,method:'POST',body:{flagged:'yes'}})).status,400);
+ const flagged=await call(owner,'/invoices/'+i.id+'/flag',{business:a,method:'POST',body:{flagged:true}});assert.equal(flagged.status,200);assert.equal((await flagged.json()).flagged,true);
+ const invitation=await (await call(owner,'/team/invite',{business:a,method:'POST',body:{email:member.email}})).json();await call(member,'/auth/join',{method:'POST',body:{name:'Member',token:new URL(invitation.url).searchParams.get('invite')}});
+ assert.equal((await (await call(member,'/invoices',{business:a})).json())[0].flagged,true);
+ assert.equal((await call(member,'/invoices/'+i.id+'/edit',{business:a,method:'POST',body:{invoice:draft,number:i.number,status:'OPEN'}})).status,200);
+ await call(owner,'/invoices/'+i.id+'/delete',{business:a,method:'POST',body:{}});assert.equal((await (await call(owner,'/invoices/trash',{business:a})).json())[0].flagged,true);
+ await call(owner,'/invoices/'+i.id+'/restore',{business:a,method:'POST',body:{}});
+ const clear=await call(member,'/invoices/'+i.id+'/flag',{business:a,method:'POST',body:{flagged:false}});assert.equal((await clear.json()).flagged,false);
+ }finally{sqlite.close()}
+});

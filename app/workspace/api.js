@@ -9,3 +9,5 @@ export const api={list:()=>request('/invoices'),trash:()=>request('/invoices/tra
 api.updateClient=(id,d)=>request('/clients/'+id,d);
 api.bank=id=>request('/clients/'+id+'/bank');
 api.saveBank=(id,d)=>request('/clients/'+id+'/bank',d);
+
+api.flag=(id,flagged)=>request(`/invoices/${id}/flag`,{flagged});

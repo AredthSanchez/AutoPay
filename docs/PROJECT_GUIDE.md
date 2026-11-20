@@ -104,6 +104,7 @@ The normal source tree at the repository root is the active application. `AutoPa
 | [app/workspace/index.jsx](../app/workspace/index.jsx) | Main workspace and its view state, overview, invoice table/details, forms, client directory/profiles, shared dialogs, file manager, and voice setup presentation. |
 | [app/workspace/style.css](../app/workspace/style.css) | Workspace branding, tables, responsive navigation, forms, centered dialogs, printing, and assistant styles. |
 | [app/workspace/api.js](../app/workspace/api.js) | API request helper, token provider, selected-business header, invoice/client operations, and attachment upload/download. |
+| [app/workspace/excel.js](../app/workspace/excel.js) | Creates an Excel OOXML workbook and downloads it without an external API or runtime spreadsheet dependency. |
 | [app/workspace/domain.js](../app/workspace/domain.js) | Money validation, line-item totals, derived overdue status, dates, aging, filter matching, search matching, and a retained sample-data helper. |
 | [app/business-settings.jsx](../app/business-settings.jsx) | Account/business profile forms, team listing, invitation-link creation, notification preferences, notification status, and retry controls. |
 | [app/workspace/assistant.jsx](../app/workspace/assistant.jsx) | Chat interface, suggested questions, conversation state, busy/error states, and testing/provider-mode explanations. |
@@ -306,6 +307,11 @@ Deleting an invoice sets its deletion flag and moves it to Trash. Restoring clea
 
 ## Search, filters, export, and dialogs
 
+The top-right **Log out** button ends the Supabase session and returns to the login page. Invoice checkboxes support individual selection, select-all for the visible filtered rows, and clearing selection. Bulk flag, clear-flag, export, and delete actions apply only to the checked invoices in the current filtered list. Deletion requires a centered confirmation and moves invoices to recoverable Trash. If an action partially fails, successful changes remain saved and failed invoices remain checked for retry.
+
+Every invoice row has a clickable colored circle: orange for special attention, red for overdue, amber for pending, green for paid, and gray for void. Attention flags are stored on the invoice JSON record, shared across the business, retained through edits and restore, and recorded in the invoice timeline. The **Needs attention** filter shows flagged records. Clicking a circle toggles the flag; the separate status badge continues to show the payment status.
+
+
 The workspace loads the selected business's records, then performs search/filter matching in the browser. There is no separate server-side full-text search service.
 
 - Global search, including the keyboard shortcut, finds loaded invoice/client fields such as names, invoice numbers, emails, phone numbers, notes, and check references.
@@ -313,7 +319,7 @@ The workspace loads the selected business's records, then performs search/filter
 - Filters combine due-date range, payment-date range, aging range, amount range, and status.
 - Payment-date filters require a recorded payment date; missing dates do not satisfy a date range.
 - Filter ranges are inclusive, and the UI warns about reversed ranges.
-- CSV export uses the current filtered invoice list, quoted cells, and protection against common spreadsheet formula prefixes.
+- Excel export downloads a real `.xlsx` workbook containing the checked invoices in the current filtered list, or all filtered invoices when none are checked. Amounts and aging remain numeric; check references retain leading zeros, and user text is stored as text rather than executable formulas. The workbook includes attention flags, notes, dates, and payment details.
 - Invoice detail offers browser printing/PDF output through the print stylesheet.
 
 Create/edit, client-profile, bank, note, payment, search, and confirmation overlays share the native `dialog` component. It uses `showModal`, a backdrop, close/Escape handling, viewport centering, and a maximum height with internal scrolling. The shared CSS explicitly applies fixed positioning, an inset, automatic margins, and a content-fitting height.
@@ -600,10 +606,11 @@ Back up the D1 database and encryption key before migrations or key/storage chan
 
 ## Tests and verification
 
-The current source has **24 automated tests** across four test files:
+The current source has **27 automated tests** across five test files:
 
 | Test file | Main coverage |
 | --- | --- |
+| `tests/excel.test.mjs` | OOXML structure, numeric amounts, leading-zero references, formula-safe text, attention flags, and empty exports. |
 | `tests/domain.test.js` | Cent-based totals, invalid line items, aging, paid-date anchoring, inclusive filters, and scoped loaded-record search. |
 | `tests/business-isolation.test.mjs` | Shared business membership, email-bound invitations, cross-business rejection, origin/marker checks, attachment scoping, email outbox/provider idempotency, bank encryption/owner access, assistant setup/limits/errors, testing reports, and zero outbound provider calls in testing mode. |
 | `tests/independent-auth.test.mjs` | Old-host header rejection, provider token checking, confirmed-email requirement, anonymous/invalid/provider-failure handling, safe public configuration, and explicit imported identity adoption. |
@@ -697,3 +704,11 @@ Read source behavior before changing it, keep credentials out of Git, run checks
 - [Cloudflare Wrangler configuration](https://developers.cloudflare.com/workers/wrangler/configuration/)
 
 The source-linked behavior above describes this repository. Provider interfaces, available models, plan limits, and billing can change; verify current provider documentation before changing those integrations.
+
+### Invoice attention endpoint
+
+`POST /api/invoices/:id/flag` accepts `{ "flagged": true }` or `{ "flagged": false }`. It requires business membership and the same origin/request headers as other writes, validates the boolean, updates the invoice with the existing optimistic version check, and adds a timeline event. No schema migration is required because `flagged` lives in invoice JSON; historical invoices without it are treated as unflagged. Bulk actions reuse the individually authorized endpoints and report partial failures.
+
+### Brand assets
+
+[public/autopay-logo.svg](../public/autopay-logo.svg) is the AutoPay mark: a white A on a green rounded tile with a lime payment check. The same vector asset is used on authentication pages, in the workspace, and as the browser favicon.
