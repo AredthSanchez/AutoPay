@@ -313,7 +313,7 @@ Deleting an invoice sets its deletion flag and moves it to Trash. Restoring clea
 
 The top-right **Log out** button ends the Supabase session and returns to the login page. Invoice checkboxes support individual selection, select-all for the visible filtered rows, and clearing selection. Bulk flag, clear-flag, export, and delete actions apply only to the checked invoices in the current filtered list. Deletion requires a centered confirmation and moves invoices to recoverable Trash. If an action partially fails, successful changes remain saved and failed invoices remain checked for retry.
 
-Every invoice row has a clickable colored circle: orange for special attention, red for overdue, amber for pending, green for paid, and gray for void. Attention flags are stored on the invoice JSON record, shared across the business, retained through edits and restore, and recorded in the invoice timeline. The **Needs attention** filter shows flagged records. Clicking a circle toggles the flag; the separate status badge continues to show the payment status.
+Every invoice row has a clickable colored circle: violet for special attention, red for overdue, amber for pending, emerald for paid, and gray for void. Attention flags are stored on the invoice JSON record, shared across the business, retained through edits and restore, and recorded in the invoice timeline. The **Needs attention** filter shows flagged records. Clicking a circle toggles the flag; the separate status badge continues to show the payment status.
 
 
 The workspace loads the selected business's records, then performs search/filter matching in the browser. There is no separate server-side full-text search service.
@@ -719,7 +719,7 @@ The source-linked behavior above describes this repository. Provider interfaces,
 
 ### Brand assets
 
-[public/autopay-logo.svg](../public/autopay-logo.svg) is the AutoPay mark: a dark-blue A on a light sky-blue rounded tile with a pale payment-check accent. The same vector asset is used on authentication pages, in the workspace, and as the browser favicon.
+[public/autopay-logo.svg](../public/autopay-logo.svg) is the AutoPay mark: a white A on a blue rounded tile with a mint payment-check accent. The same vector asset is used on authentication pages, in the workspace, and as the browser favicon.
 
 ### Invoice productivity tools and refreshed workspace
 
@@ -739,7 +739,7 @@ The test suite covers quick-view boundaries, stable sorting, independent duplica
 
 ### Blue theme, clearable dropdowns, and invoice row documents
 
-The workspace, authentication pages, and SVG logo use a light sky-blue palette. Product-owned text uses plain hyphens or explicit missing-value labels instead of em dashes. Existing generated timeline entries are normalized for display; user-entered notes and files are not rewritten.
+The workspace, authentication pages, and SVG logo use slate text and neutral surfaces with blue actions, emerald paid indicators, amber pending indicators, red overdue indicators, and violet attention flags. Product-owned text uses plain hyphens or explicit missing-value labels instead of em dashes. Existing generated timeline entries are normalized for display; user-entered notes and files are not rewritten.
 
 Each editable dropdown has a clear button. Filters reset to all invoices, sorting resets to newest first, and row count resets to 10. Form dropdowns clear to an empty choice and retain required-field validation. The active business workspace remains selected because it determines authorization scope. Report timezone uses an editable IANA timezone input with suggestions.
 
