@@ -11,3 +11,5 @@ api.bank=id=>request('/clients/'+id+'/bank');
 api.saveBank=(id,d)=>request('/clients/'+id+'/bank',d);
 
 api.flag=(id,flagged)=>request(`/invoices/${id}/flag`,{flagged});
+
+api.recordPayment=(id,payment)=>request(`/invoices/${id}/record-payment`,payment);

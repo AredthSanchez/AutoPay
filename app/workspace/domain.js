@@ -9,3 +9,23 @@ export function aging(i,today=localDate()){if(i.status==='VOID')return {text:'â€
 export const emptyFilters=()=>({dueFrom:'',dueTo:'',paidFrom:'',paidTo:'',ageMin:'',ageMax:'',amountMin:'',amountMax:''});
 export function matchesFilters(i,f){const day=i.status==='PAID'?paymentDay(i):null,days=aging(i).days;if(f.dueFrom&&i.dueDate<f.dueFrom||f.dueTo&&i.dueDate>f.dueTo)return false;if(f.paidFrom&&(!day||day<f.paidFrom)||f.paidTo&&(!day||day>f.paidTo))return false;if(f.ageMin!==''&&(days===null||days<Number(f.ageMin))||f.ageMax!==''&&(days===null||days>Number(f.ageMax)))return false;if(f.amountMin!==''&&i.total<Number(f.amountMin)||f.amountMax!==''&&i.total>Number(f.amountMax))return false;return true}
 export function workspaceMatches(query,invoices,clients){const tokens=query.toLowerCase().trim().split(/\s+/).filter(Boolean);if(!tokens.length)return {invoices:[],clients:[]};const match=text=>tokens.every(token=>text.toLowerCase().includes(token));return {invoices:invoices.filter(i=>!i.deleted&&match([i.number,i.client,i.email,i.phone,i.notes,i.checkNumber].filter(Boolean).join(' '))),clients:clients.filter(c=>match([c.name,c.email,c.phone,c.notes].filter(Boolean).join(' ')))}}
+
+export function quickMatches(invoice,view,today=localDate()){
+ if(view==='attention')return !!invoice.flagged;
+ if(view==='overdue')return invoice.status==='OPEN'&&invoice.dueDate<today;
+ if(view==='week'){const end=new Date(today+'T12:00:00Z');end.setUTCDate(end.getUTCDate()+7);return invoice.status==='OPEN'&&invoice.dueDate>=today&&invoice.dueDate<=end.toISOString().slice(0,10)}
+ return true;
+}
+export function sortInvoices(invoices,sort='newest'){
+ const collator=new Intl.Collator('en',{numeric:true,sensitivity:'base'});
+ return [...invoices].sort((a,b)=>{let result=0;
+ if(sort==='due')result=collator.compare(a.dueDate||'9999',b.dueDate||'9999');
+ else if(sort==='amountHigh')result=b.total-a.total;
+ else if(sort==='amountLow')result=a.total-b.total;
+ else if(sort==='client')result=collator.compare(a.client,b.client);
+ else if(sort==='number')result=collator.compare(a.number,b.number);
+ else result=collator.compare(b.createdAt||'',a.createdAt||'');
+ return result||collator.compare(a.number,b.number)||collator.compare(a.id,b.id);
+ });
+}
+export function duplicateDraft(invoice){return {client:invoice.client,email:invoice.email,phone:invoice.phone||'',notes:invoice.notes||'',dueDate:localDate(14),items:invoice.items.map(item=>({...item}))}}

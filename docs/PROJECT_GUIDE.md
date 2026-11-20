@@ -104,6 +104,7 @@ The normal source tree at the repository root is the active application. `AutoPa
 | [app/workspace/index.jsx](../app/workspace/index.jsx) | Main workspace and its view state, overview, invoice table/details, forms, client directory/profiles, shared dialogs, file manager, and voice setup presentation. |
 | [app/workspace/style.css](../app/workspace/style.css) | Workspace branding, tables, responsive navigation, forms, centered dialogs, printing, and assistant styles. |
 | [app/workspace/api.js](../app/workspace/api.js) | API request helper, token provider, selected-business header, invoice/client operations, and attachment upload/download. |
+| [app/workspace/workspace-refresh.css](../app/workspace/workspace-refresh.css) | Workspace visual hierarchy, responsive toolbar, compact table, contextual bulk actions, and mobile presentation. |
 | [app/workspace/excel.js](../app/workspace/excel.js) | Creates an Excel OOXML workbook and downloads it without an external API or runtime spreadsheet dependency. |
 | [app/workspace/domain.js](../app/workspace/domain.js) | Money validation, line-item totals, derived overdue status, dates, aging, filter matching, search matching, and a retained sample-data helper. |
 | [app/business-settings.jsx](../app/business-settings.jsx) | Account/business profile forms, team listing, invitation-link creation, notification preferences, notification status, and retry controls. |
@@ -606,7 +607,7 @@ Back up the D1 database and encryption key before migrations or key/storage chan
 
 ## Tests and verification
 
-The current source has **27 automated tests** across five test files:
+The current source has **31 automated tests** across five test files:
 
 | Test file | Main coverage |
 | --- | --- |
@@ -712,3 +713,19 @@ The source-linked behavior above describes this repository. Provider interfaces,
 ### Brand assets
 
 [public/autopay-logo.svg](../public/autopay-logo.svg) is the AutoPay mark: a white A on a green rounded tile with a lime payment check. The same vector asset is used on authentication pages, in the workspace, and as the browser favicon.
+
+### Invoice productivity tools and refreshed workspace
+
+The invoice toolbar offers quick views for all invoices, overdue open invoices, open invoices due from today through seven days ahead (inclusive), and attention flags. Quick views combine with status, search, and advanced filters. Counts on quick-view buttons refer to the entire workspace. Sorting supports newest first, earliest due date, highest/lowest amount, client name, and invoice number, with deterministic numeric-aware ordering. Changing search, filters, sorting, or page size resets the page and selection.
+
+Pagination offers 10, 25, or 50 rows. The header checkbox selects or deselects the current page; checked invoices can accumulate across pages within the current filtered list. Bulk actions and selected Excel exports apply across those selected pages. With no selection, export includes the entire filtered list. The footer shows the current range and total value of the filtered invoices, including paid and void records if present; it is not an outstanding-balance metric.
+
+The compact table initially shows selection, attention, client/invoice, due date, amount, and status. **Show payment columns** reveals payment date, aging, and payment method/check reference without changing the exported workbook. A refresh button reloads business records. The color legend is collapsible, and bulk controls appear only after selection. A sticky header preserves search and logout access; the mobile invoice table scrolls within its own container.
+
+**Duplicate** in invoice details opens a new editable invoice draft. It copies client contact details, invoice notes, and line items, and defaults the due date to 14 days ahead. It does not copy the invoice ID/number, status, payment metadata, flags, attachments, or timeline. Nothing is created until the user submits the draft; the normal invoice-creation alert behavior then applies.
+
+The overview’s **Next up** queue shows up to three open invoices that are flagged or due by seven days ahead, sorted by due date. Clicking an item opens its details. The overdue shortcut opens the invoice workspace in the overdue quick view.
+
+**Record payment** is available only when all checked invoices are open. Its centered form asks for a payment date, non-demo payment method, and a check reference when appropriate. The same metadata applies to all selected invoices. `POST /api/invoices/:id/record-payment` validates this information, requires membership in the invoice business, uses the invoice version check, records an audit event, and marks the record paid. It does not transfer funds or contact a payment processor. Already-paid or void invoices return a conflict rather than silently overwriting payment information. **Void selected** also requires open invoices and an explicit confirmation; it reuses the existing scoped void endpoint. Both operations report partial failures with unsuccessful invoices retained for retry.
+
+The test suite covers quick-view boundaries, stable sorting, independent duplicate drafts, payment validation, cross-business rejection, and prevention of payment overwrite in addition to the prior coverage. Browser QA uses isolated sample records; it does not create, pay, void, or delete production invoices.
