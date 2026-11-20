@@ -719,7 +719,7 @@ The source-linked behavior above describes this repository. Provider interfaces,
 
 ### Brand assets
 
-[public/autopay-logo.svg](../public/autopay-logo.svg) is the AutoPay mark: a white A on a blue rounded tile with a light-blue payment check. The same vector asset is used on authentication pages, in the workspace, and as the browser favicon.
+[public/autopay-logo.svg](../public/autopay-logo.svg) is the AutoPay mark: a dark-blue A on a light sky-blue rounded tile with a pale payment-check accent. The same vector asset is used on authentication pages, in the workspace, and as the browser favicon.
 
 ### Invoice productivity tools and refreshed workspace
 
@@ -739,7 +739,7 @@ The test suite covers quick-view boundaries, stable sorting, independent duplica
 
 ### Blue theme, clearable dropdowns, and invoice row documents
 
-The workspace, authentication pages, and SVG logo use a blue palette. Product-owned text uses plain hyphens or explicit missing-value labels instead of em dashes. Existing generated timeline entries are normalized for display; user-entered notes and files are not rewritten.
+The workspace, authentication pages, and SVG logo use a light sky-blue palette. Product-owned text uses plain hyphens or explicit missing-value labels instead of em dashes. Existing generated timeline entries are normalized for display; user-entered notes and files are not rewritten.
 
 Each editable dropdown has a clear button. Filters reset to all invoices, sorting resets to newest first, and row count resets to 10. Form dropdowns clear to an empty choice and retain required-field validation. The active business workspace remains selected because it determines authorization scope. Report timezone uses an editable IANA timezone input with suggestions.
 
