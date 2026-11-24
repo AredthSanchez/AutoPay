@@ -1,8 +1,6 @@
 /**
- * Builds the business settings screens: team members, invitations, new-invoice emails, and
- * business contact details.
- * Some settings are for the owner only. The server checks that permission even if someone tries
- * to bypass the buttons on this screen.
+ * Business profile, team invitations, and invoice email settings.
+ * Owner-only actions are checked by the server as well as restricted in the UI.
  */
 "use client";
 import React, { useEffect, useState } from "react";
@@ -265,7 +263,7 @@ export default function BusinessSettings({ business, account }) {
     </section>
   );
 }
-// Business contact details and a person's account name are different records and are saved
+// Business contact details and a user's account name are different records and are saved
 // separately.
 function BusinessProfile({ business, account }) {
   const [profile, setProfile] = useState(null),

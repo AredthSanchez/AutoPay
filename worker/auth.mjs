@@ -1,7 +1,7 @@
 /**
- * Checks who is logged in by asking Supabase, the service that manages AutoPay accounts.
- * A person's display name is just a label. Their access to a business comes from membership
- * records in AutoPay's database.
+ * Verifies logins through Supabase and links explicitly mapped accounts imported from the
+ * earlier app.
+ * Business access comes from database memberships, not editable profile names.
  */
 export class AuthUnavailable extends Error {}
 // Accept only a secure login-service address and a key intended to be public. Reject private
@@ -37,7 +37,7 @@ export function authConfig(env) {
   } else if (!key.startsWith("sb_publishable_")) return null;
   return { url, key };
 }
-// Ask Supabase to verify the login proof. Do not trust a user ID supplied in a request or
+// Ask Supabase to verify the login token. Do not trust a user ID supplied in a request or
 // merely read the contents of an unchecked login token.
 export async function authenticatedUser(request, env) {
   const config = authConfig(env);
@@ -70,7 +70,7 @@ export async function authenticatedUser(request, env) {
   };
 }
 // When moving accounts from the old app, use only mappings prepared in the database.
-// Supabase must confirm the person owns the mapped email address before their old
+// Supabase must confirm the user owns the mapped email address before their old
 // business membership can be linked. A name or ID typed into a request is not enough.
 export async function adoptMigratedIdentity(db, user) {
   const q = (sql, ...args) => db.prepare(sql).bind(...args);

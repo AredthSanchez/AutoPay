@@ -1,8 +1,6 @@
 /**
- * Saves invoice attachments in Cloudflare D1, AutoPay's database, when separate R2 file storage
- * is not configured.
- * This file stores and retrieves file contents. service.mjs first checks that the person is
- * allowed to access the invoice.
+ * Database storage for invoice attachments when R2 file storage is not configured.
+ * The service checks invoice access before this module reads or writes file contents.
  */
 // For this testing version, store files in the database as small pieces so each
 // piece fits its size limit. R2, a separate file-storage service, can replace this

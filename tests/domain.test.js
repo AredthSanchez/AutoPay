@@ -1,6 +1,5 @@
 /**
- * Checks invoice calculations and list behavior: prices, overdue days, date and amount filters,
- * search, sorting, and copying an invoice into a new draft.
+ * Tests invoice arithmetic, aging, filters, search, sorting, and duplicate-draft defaults.
  */
 import test from "node:test";
 import assert from "node:assert/strict";

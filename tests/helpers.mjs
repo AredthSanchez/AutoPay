@@ -1,8 +1,6 @@
 /**
- * Creates a temporary database and pretend file storage for automated tests. The database exists
- * only in memory, not in a real business account.
- * It also builds test requests so other tests can act as different people and check who may
- * access each business.
+ * Temporary SQLite database, test file storage, and request helpers for integration tests.
+ * Uses explicit test identities without touching production business records.
  */
 import { DatabaseSync } from "node:sqlite";
 import { readFileSync } from "node:fs";

@@ -1,6 +1,5 @@
 /**
- * Checks that an attachment can be split into database pieces, read back with exactly the same
- * contents, and fully removed when deleted.
+ * Tests attachment storage, exact reconstruction from database chunks, and complete deletion.
  */
 import test from "node:test";
 import assert from "node:assert/strict";

@@ -1,8 +1,7 @@
 /**
- * Receives requests at AutoPay's web address. It sends login and invoice requests to the right
- * server code and serves the website's built files.
- * It also starts scheduled email reports and adds browser safety instructions to website
- * responses.
+ * Cloudflare request handler for the API, website assets, and scheduled reports.
+ * Adds security headers to responses and verifies identity before forwarding business API
+ * requests.
  */
 import { runScheduledReports } from "../lib/autopay/reports.mjs";
 import { DatabaseFiles } from "./database-files.mjs";

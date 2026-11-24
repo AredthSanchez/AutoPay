@@ -1,27 +1,6 @@
 # AutoPay file-by-file guide
 
-This guide describes the current editable application at the repository root. Comments in source files explain non-obvious behavior and invariants. They do not change application logic. The historical ZIP is documented but intentionally preserved as a binary archive.
-
-## If you are new to reading code
-
-Start with the short comment at the top of a file. It explains which part of AutoPay that file handles. Comments above a function explain the job it performs and why a check or calculation is needed. The code below each comment performs that work; comments themselves do not run.
-
-For example, the invoice-saving comment explains that a teammate's newer edits must not be overwritten. The code checks the invoice version to make that rule happen. You can understand the reason for the check before learning its programming syntax.
-
-| Term you may encounter | Plain-language meaning |
-| --- | --- |
-| Browser or frontend | The part of AutoPay running on the person's device, including screens and buttons. |
-| Server or backend | The code that receives requests, checks permissions, and saves or returns records. AutoPay runs it on Cloudflare. |
-| Request and response | A message asking the server to do something, and the server's reply. |
-| API | The agreed set of requests that lets the screens talk to the server. |
-| Database / D1 | The saved tables holding business records. D1 is the Cloudflare service used for those tables. |
-| Supabase | The service AutoPay asks to create accounts, manage passwords, and check logins. |
-| Token / login proof | A temporary value supplied after login and checked by the server when records are requested. |
-| Membership and role | Which business a person belongs to, and whether they are an owner or a member. |
-| Migration | A numbered database update that creates or changes tables. Run these in order. |
-| Encryption | Protecting saved information so it cannot be read without the correct secret key. |
-| Retry | Trying an operation again after an earlier attempt failed or its result was uncertain. |
-| Test / mock | An automatic check; a mock replaces a real service with a pretend response so the check has no real-world side effects. |
+This guide describes the current editable application at the repository root. Source comments describe each module's responsibilities and the reasons for important checks. The historical ZIP is documented but intentionally preserved as a binary archive.
 
 ## How a request moves through the project
 

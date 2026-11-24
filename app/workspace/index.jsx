@@ -1,8 +1,6 @@
 /**
- * Builds the main AutoPay screen: invoice lists, client details, navigation, search, and forms
- * that open in dialogs.
- * It remembers what the person is viewing and has selected. When they save, it asks the server
- * to check and store their changes.
+ * Main workspace views, invoice selection, search, and record dialogs.
+ * Forms submit changes to the server for validation and storage.
  */
 "use client";
 import ClearableSelect from "../clearable-select";
@@ -201,7 +199,7 @@ function App({ account, business, businesses, switchBusiness, onSignOut }) {
   function toggleChecked(id) {
     setChecked((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
   }
-  // When updating several invoices, remember which ones failed so the person can select them
+  // When updating several invoices, remember which ones failed so the user can select them
   // again and retry.
   async function bulk(action, ids = checkedIds, payment) {
     if (!ids.length) return;

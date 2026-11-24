@@ -1,8 +1,7 @@
 /**
- * Builds the screen where a business chooses who receives invoice reports and when they are
- * emailed.
- * It also shows previous delivery attempts and lets an authorized owner send a test or retry a
- * report.
+ * Report schedule settings and delivery history for the active business.
+ * Owners can update recipients and delivery times, send test reports, and retry failed
+ * deliveries.
  */
 import React, { useEffect, useState } from "react";
 import { request } from "./workspace/api";

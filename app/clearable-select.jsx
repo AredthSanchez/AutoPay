@@ -1,7 +1,6 @@
 /**
- * Displays a dropdown with a button to clear or reset the choice.
- * The screen using this dropdown can keep track of the choice itself, or let this component
- * remember it.
+ * Dropdown with a reset button. Supports a value managed by its parent screen or its own
+ * internal state.
  */
 import React, { Children, useState } from "react";
 // Clicking clear chooses resetValue, usually an empty choice, and notifies the screen just like

@@ -1,8 +1,7 @@
 /**
- * Creates the Excel file downloaded from the invoice screen. It builds the spreadsheet in the
- * browser, so an export does not need a separate server request.
- * Amounts are written as numbers. Names, notes, and other typed text stay text, so Excel does
- * not run them as formulas.
+ * Generates invoice spreadsheets in the browser.
+ * Amounts use numeric cells; names, notes, and references use text cells to prevent Excel from
+ * treating them as formulas.
  */
 import { status, paymentDay, aging } from "./domain.js";
 const encoder = new TextEncoder();

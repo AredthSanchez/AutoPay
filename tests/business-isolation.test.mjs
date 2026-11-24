@@ -1,8 +1,7 @@
 /**
- * Checks that team members can share their own business records and cannot access another
- * business's records. It also checks invoice actions, banking, email notices, and chat.
- * Outside services are replaced with pretend responses, so running these tests does not send
- * real emails, use paid AI, or move money.
+ * Tests shared business access, isolation between businesses, and invoice, banking, email, and
+ * chat actions.
+ * External services are mocked; tests do not send real email, use paid AI, or move money.
  */
 import test from "node:test";
 import assert from "node:assert/strict";

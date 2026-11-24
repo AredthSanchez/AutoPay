@@ -1,8 +1,7 @@
 /**
- * Connects the screens in the browser to AutoPay's server. Each request includes the current
- * login proof and the selected business.
- * The server checks both before returning records or saving changes; choosing a business in the
- * browser does not grant access to it.
+ * Shared browser requests for invoices, clients, and business settings.
+ * Each request includes the current login token and selected business; the server verifies
+ * access before returning or changing records.
  */
 export const backend = true;
 let currentBusiness = "";
@@ -10,7 +9,7 @@ let accessTokenProvider = async () => null;
 export const setAccessTokenProvider = (provider) => {
   accessTokenProvider = provider;
 };
-// Ask for the current temporary login proof before sending a request, so an automatically
+// Ask for the current login token before sending a request, so an automatically
 // renewed login keeps working.
 export async function authorizedHeaders(headers = {}) {
   const token = await accessTokenProvider();
@@ -86,7 +85,7 @@ export const api = {
     }
     return r.json();
   },
-  // Request the file with login proof first. A normal download link cannot add that proof, so
+  // Request the file with login token first. A normal download link cannot add that proof, so
   // it would fail the server's access check.
   async download(id, file) {
     const r = await fetch(`/api/invoices/${id}/attachments/${file.id}/download`, {

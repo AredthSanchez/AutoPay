@@ -1,6 +1,6 @@
 /**
- * Opens the generated spreadsheet's internal files to check amounts and text. It also checks
- * that text resembling an Excel formula is exported safely as text.
+ * Checks spreadsheet amounts, text references, and safe handling of text that resembles an Excel
+ * formula.
  */
 import test from "node:test";
 import assert from "node:assert/strict";

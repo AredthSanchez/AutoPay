@@ -1,8 +1,6 @@
 /**
- * Shows the sign-up, login, and password-recovery screens. After login, it lets the person
- * create, join, or choose a business before opening its invoices.
- * The browser remembers the login, but the server still checks who the person is and which
- * business they may access.
+ * Handles signup, login, password recovery, and business selection before loading the workspace.
+ * The server verifies each login and checks business membership independently of browser state.
  */
 import React, { Suspense, lazy, useEffect, useRef, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
@@ -74,7 +72,7 @@ export default function AuthShell() {
           return;
         }
         // Give the browser only the public login-service key. The server separately checks the
-        // temporary login proof sent with each request.
+        // login token sent with each request.
         const auth = createClient(config.supabaseUrl, config.supabasePublishableKey, {
           auth: {
             flowType: "pkce",
@@ -185,7 +183,7 @@ export default function AuthShell() {
       }
     });
   }
-  // After confirming their email, a person can create a business or accept an invitation sent
+  // After confirming their email, a user can create a business or accept an invitation sent
   // to that same email address.
   async function createWorkspace(e) {
     e.preventDefault();

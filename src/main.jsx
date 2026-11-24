@@ -1,6 +1,6 @@
 /**
- * Starts AutoPay in the browser by displaying the login and account screen inside the HTML page.
- * The invoice workspace opens after a business is selected.
+ * Browser entry point. Renders the account screen, which loads the workspace after business
+ * selection.
  */
 import React from "react";
 import { createRoot } from "react-dom/client";

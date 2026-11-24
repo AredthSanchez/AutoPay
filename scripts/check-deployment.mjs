@@ -1,8 +1,7 @@
 /**
- * Checks the saved hosting settings before publishing, including the Cloudflare account,
- * database, login setup, and free chat mode.
- * It only reads configuration. It does not check whether the live database is up to date,
- * secrets are installed, or emails actually arrive.
+ * Checks saved hosting identifiers, public login settings, and testing chat mode before
+ * deployment.
+ * Does not verify live database updates, installed secrets, or email delivery.
  */
 import { readFileSync } from "node:fs";
 import { authConfig } from "../worker/auth.mjs";

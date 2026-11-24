@@ -1,8 +1,7 @@
 /**
- * Checks report settings, delivery times, timezone changes, owner permissions, and retries. It
- * also checks that two send attempts do not take the same report at once.
- * Tests use chosen dates and pretend email responses, so results are repeatable and no real
- * reports are emailed.
+ * Tests report schedules, timezones, owner permissions, retries, and overlapping delivery
+ * attempts.
+ * Fixed dates and mocked email responses keep tests repeatable without sending reports.
  */
 import test from "node:test";
 import assert from "node:assert/strict";

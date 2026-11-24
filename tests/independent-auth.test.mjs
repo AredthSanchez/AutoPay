@@ -1,8 +1,6 @@
 /**
- * Checks that the server accepts only valid logins and handles accounts imported from the
- * earlier app safely. It also checks that secret login-service keys are not exposed publicly.
- * The login service is simulated, so these tests do not use real accounts or production
- * credentials.
+ * Tests login verification, public-key restrictions, and imported account linking.
+ * Supabase responses are mocked; production accounts and credentials are not used.
  */
 import test from "node:test";
 import assert from "node:assert/strict";

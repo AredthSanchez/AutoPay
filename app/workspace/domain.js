@@ -1,8 +1,7 @@
 /**
- * Contains reusable rules for invoice amounts, dates, search, and sorting. These functions
- * calculate answers without saving records.
- * Invoices are saved as OPEN, PAID, or VOID. An OPEN invoice is shown as OVERDUE when its due
- * date has passed.
+ * Shared invoice calculations, date rules, search, and sorting. These functions do not save
+ * records.
+ * OVERDUE is a display status calculated from an OPEN invoice and its due date.
  */
 export const money = (n) =>
   new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(n);

@@ -1,7 +1,7 @@
 /**
- * Builds the chat window where people ask about the selected business's invoices and clients.
- * It sends the conversation to the server. The server chooses the free testing assistant or the
- * optional paid assistant and decides which records it may use.
+ * Chat panel for invoice and client summaries in the active business.
+ * The server selects the answering mode and supplies the records the assistant is allowed to
+ * read.
  */
 "use client";
 import React, { useEffect, useRef, useState } from "react";
