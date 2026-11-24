@@ -1,9 +1,11 @@
 /**
- * Server authentication adapter: validates public configuration and verifies bearer tokens with Supabase.
- * Profile names are display data; business permissions come from D1 memberships, not editable metadata.
+ * Checks who is logged in by asking Supabase, the service that manages AutoPay accounts.
+ * A person's display name is just a label. Their access to a business comes from membership
+ * records in AutoPay's database.
  */
 export class AuthUnavailable extends Error {}
-// Only accept an HTTPS origin and public publishable/legacy anon keys; reject server-secret credentials.
+// Accept only a secure login-service address and a key intended to be public. Reject private
+// server keys so they cannot be sent to the browser.
 export function authConfig(env) {
   const url = String(env.SUPABASE_URL || "").replace(/\/$/, "");
   const key = String(env.SUPABASE_PUBLISHABLE_KEY || "");
@@ -23,7 +25,8 @@ export function authConfig(env) {
     return null;
   }
   if (key.startsWith("sb_secret_")) return null;
-  // Legacy anon JWTs are supported, but service-role keys must never be public.
+  // Older public keys are supported too. Read the key's declared role here only to reject a
+  // private administrator key, not to identify a logged-in person.
   if (key.startsWith("eyJ")) {
     try {
       const encoded = key.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
@@ -34,7 +37,8 @@ export function authConfig(env) {
   } else if (!key.startsWith("sb_publishable_")) return null;
   return { url, key };
 }
-// Verify against Supabase Auth, not a locally decoded JWT or identity headers from a former host.
+// Ask Supabase to verify the login proof. Do not trust a user ID supplied in a request or
+// merely read the contents of an unchecked login token.
 export async function authenticatedUser(request, env) {
   const config = authConfig(env);
   if (!config) throw new AuthUnavailable("Email login is not configured yet.");
@@ -65,9 +69,9 @@ export async function authenticatedUser(request, env) {
     fullName: u.user_metadata?.full_name || null,
   };
 }
-// Optional, explicit identity mapping imported from the old workspace. Only a
-// Supabase-verified email can adopt an imported membership; request headers and
-// user-supplied profile fields cannot choose another account's identity.
+// When moving accounts from the old app, use only mappings prepared in the database.
+// Supabase must confirm the person owns the mapped email address before their old
+// business membership can be linked. A name or ID typed into a request is not enough.
 export async function adoptMigratedIdentity(db, user) {
   const q = (sql, ...args) => db.prepare(sql).bind(...args);
   const mapping = await q(

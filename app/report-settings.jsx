@@ -1,6 +1,8 @@
 /**
- * Loads and edits the active business report schedule and displays delivery history.
- * Saving, test delivery, and retry actions are authorized by the server.
+ * Builds the screen where a business chooses who receives invoice reports and when they are
+ * emailed.
+ * It also shows previous delivery attempts and lets an authorized owner send a test or retry a
+ * report.
  */
 import React, { useEffect, useState } from "react";
 import { request } from "./workspace/api";
@@ -14,7 +16,7 @@ export default function ReportSettings({ business }) {
     [busy, setBusy] = useState(false),
     [error, setError] = useState(""),
     [message, setMessage] = useState("");
-  // Load schedule configuration and recent deliveries together for this business.
+  // Load when this business wants reports and the list of recent email attempts.
   async function load() {
     const [s, r] = await Promise.all([request("/report-settings"), request("/reports")]);
     setSettings(s);

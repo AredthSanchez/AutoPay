@@ -1,6 +1,8 @@
 /**
- * Integration coverage for business membership, scoped records, invoice actions, notifications, banking, and chat.
- * Provider fetches are stubbed so tests do not send email, call OpenAI, or move money.
+ * Checks that team members can share their own business records and cannot access another
+ * business's records. It also checks invoice actions, banking, email notices, and chat.
+ * Outside services are replaced with pretend responses, so running these tests does not send
+ * real emails, use paid AI, or move money.
  */
 import test from "node:test";
 import assert from "node:assert/strict";

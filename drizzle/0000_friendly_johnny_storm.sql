@@ -1,5 +1,8 @@
--- Initial business schema. Legacy owner columns on invoices, clients, files, and notifications store BUSINESS IDs.
--- Apply migrations in numeric order; add a new migration for future schema changes.
+-- Creates the first tables for accounts, businesses, invoices, clients, files, and email
+-- notices.
+-- On business records, the older column name owner means the business ID, not a person's account
+-- ID.
+-- Run these numbered database updates in order. Add a new file for future table changes.
 CREATE TABLE `accounts` (
   `id` text PRIMARY KEY NOT NULL,
   `email` text NOT NULL,

@@ -1,10 +1,12 @@
 /**
- * Inspects generated ZIP/XML content to verify numeric amounts, text references, and formula-safe exports.
+ * Opens the generated spreadsheet's internal files to check amounts and text. It also checks
+ * that text resembling an Excel formula is exported safely as text.
  */
 import test from "node:test";
 import assert from "node:assert/strict";
 import { invoiceWorkbook } from "../app/workspace/excel.js";
-// Read stored ZIP entries independently to verify the emitted workbook structure.
+// Open the generated Excel package with separate test code to check that the exporter wrote the
+// expected files.
 function entries(bytes) {
   const view = new DataView(bytes.buffer),
     out = {};

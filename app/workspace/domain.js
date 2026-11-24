@@ -1,10 +1,13 @@
 /**
- * Pure invoice calculations and display helpers shared by the UI, server, and tests.
- * Stored statuses are OPEN, PAID, and VOID; OVERDUE is derived from an open invoice due date.
+ * Contains reusable rules for invoice amounts, dates, search, and sorting. These functions
+ * calculate answers without saving records.
+ * Invoices are saved as OPEN, PAID, or VOID. An OPEN invoice is shown as OVERDUE when its due
+ * date has passed.
  */
 export const money = (n) =>
   new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(n);
-// Parse decimal digits into integer cents before multiplication to avoid floating-point currency drift.
+// Calculate prices as whole cents, such as 1250 for $12.50, to avoid small rounding errors when
+// adding or multiplying money.
 export const cents = (n) => {
   const value = String(n);
   if (!/^\d+(\.\d{1,2})?$/.test(value))
@@ -108,7 +111,8 @@ export const paymentDay = (i) => {
   if (Number.isNaN(d.getTime())) return null;
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 };
-// Paid invoices stop aging on their recorded payment day; VOID invoices have no aging value.
+// Count how late an invoice is. For a paid invoice, stop counting on the payment date; a
+// canceled invoice has no overdue-day count.
 export function aging(i, today = localDate()) {
   if (i.status === "VOID") return { text: "Not applicable", days: null };
   const reference = i.status === "PAID" ? paymentDay(i) : today;
@@ -133,7 +137,8 @@ export const emptyFilters = () => ({
   amountMin: "",
   amountMax: "",
 });
-// Ranges are inclusive. Empty strings mean no bound, so zero remains a valid numeric filter.
+// Include the dates and amounts at both ends of each filter. A blank field means no limit;
+// entering 0 still means zero.
 export function matchesFilters(i, f) {
   const day = i.status === "PAID" ? paymentDay(i) : null,
     days = aging(i).days;
@@ -184,7 +189,8 @@ export function quickMatches(invoice, view, today = localDate()) {
   }
   return true;
 }
-// Sort a copy so view changes do not reorder the canonical invoice array.
+// Reorder a copy of the invoice list so changing the display order does not change the original
+// list used elsewhere.
 export function sortInvoices(invoices, sort = "newest") {
   const collator = new Intl.Collator("en", { numeric: true, sensitivity: "base" });
   return [...invoices].sort((a, b) => {
@@ -198,7 +204,8 @@ export function sortInvoices(invoices, sort = "newest") {
     return result || collator.compare(a.number, b.number) || collator.compare(a.id, b.id);
   });
 }
-// Reuse editable invoice content while clearing identity, settlement metadata, and prior history.
+// Copy the invoice's editable details into a new draft, but leave behind its old ID, payment
+// information, and activity history.
 export function duplicateDraft(invoice) {
   return {
     client: invoice.client,

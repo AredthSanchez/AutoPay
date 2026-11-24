@@ -1,5 +1,7 @@
--- Adds business profile fields and encrypted bank ciphertext plus a display-only last-four suffix.
--- Apply migrations in numeric order; add a new migration for future schema changes.
+-- Adds business contact details and protected client bank information.
+-- The last four bank-account digits are stored separately for display without revealing the full
+-- number.
+-- Run these numbered database updates in order. Add a new file for future table changes.
 ALTER TABLE `businesses`
 ADD `owner_name` text DEFAULT '' NOT NULL;
 

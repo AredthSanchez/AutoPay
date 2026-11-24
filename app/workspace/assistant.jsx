@@ -1,6 +1,7 @@
 /**
- * Read-only chat panel scoped to the selected business. Sends conversation text to the server,
- * which chooses testing or OpenAI mode and builds the authorized record snapshot.
+ * Builds the chat window where people ask about the selected business's invoices and clients.
+ * It sends the conversation to the server. The server chooses the free testing assistant or the
+ * optional paid assistant and decides which records it may use.
  */
 "use client";
 import React, { useEffect, useRef, useState } from "react";
@@ -26,7 +27,8 @@ export default function Assistant({ business }) {
   useEffect(() => {
     if (messages.length || busy) bottom.current?.scrollIntoView({ block: "nearest" });
   }, [messages, busy]);
-  // Send conversation context, not raw bank records or attachments; the server assembles allowed data.
+  // Send the question and earlier messages. Let the server choose the business records the
+  // assistant is allowed to read.
   async function send(value = prompt) {
     const content = value.trim();
     if (!content || busy) return;

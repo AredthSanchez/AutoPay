@@ -1,5 +1,7 @@
--- Adds per-business report schedules and a durable delivery outbox with retries and expiring leases.
--- Apply migrations in numeric order; add a new migration for future schema changes.
+-- Adds saved report schedules and a list of email delivery attempts.
+-- The records track when to send, when to retry, and whether another sender is already working
+-- on the email.
+-- Run these numbered database updates in order. Add a new file for future table changes.
 CREATE TABLE report_schedules (
   business TEXT PRIMARY KEY NOT NULL,
   recipient TEXT NOT NULL,

@@ -1,4 +1,4 @@
-/* Authentication and onboarding layouts, including mobile form sizing. */
+/* Controls how login and account-setup screens look, including how forms fit on phones. */
 .auth-layout {
   padding: 0;
   max-width: none;

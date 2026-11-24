@@ -1,6 +1,8 @@
 /**
- * Shared browser API transport. Adds the current bearer token and selected business to requests.
- * A business header selects a workspace; the server still verifies membership on every request.
+ * Connects the screens in the browser to AutoPay's server. Each request includes the current
+ * login proof and the selected business.
+ * The server checks both before returning records or saving changes; choosing a business in the
+ * browser does not grant access to it.
  */
 export const backend = true;
 let currentBusiness = "";
@@ -8,7 +10,8 @@ let accessTokenProvider = async () => null;
 export const setAccessTokenProvider = (provider) => {
   accessTokenProvider = provider;
 };
-// Resolve the current access token on demand so refreshed sessions are used without reloading.
+// Ask for the current temporary login proof before sending a request, so an automatically
+// renewed login keeps working.
 export async function authorizedHeaders(headers = {}) {
   const token = await accessTokenProvider();
   return { ...headers, ...(token ? { Authorization: "Bearer " + token } : {}) };
@@ -63,7 +66,8 @@ export const api = {
   delete: (id) => request(`/invoices/${id}/delete`, {}),
   restore: (id) => request(`/invoices/${id}/restore`, {}),
   attachments: (id) => request(`/invoices/${id}/attachments`),
-  // Let the browser supply the multipart boundary; do not set Content-Type for FormData.
+  // The browser labels the parts of this file upload itself. Setting that label here would
+  // leave out information needed to read the file.
   async attach(id, file) {
     const data = new FormData();
     data.append("file", file);
@@ -82,7 +86,8 @@ export const api = {
     }
     return r.json();
   },
-  // Fetch with authorization before creating a download URL; a plain anchor cannot attach the bearer token.
+  // Request the file with login proof first. A normal download link cannot add that proof, so
+  // it would fail the server's access check.
   async download(id, file) {
     const r = await fetch(`/api/invoices/${id}/attachments/${file.id}/download`, {
       credentials: "same-origin",

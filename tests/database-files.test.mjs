@@ -1,5 +1,6 @@
 /**
- * Verifies the D1 attachment adapter round-trips multi-chunk binary data and removes stored chunks.
+ * Checks that an attachment can be split into database pieces, read back with exactly the same
+ * contents, and fully removed when deleted.
  */
 import test from "node:test";
 import assert from "node:assert/strict";

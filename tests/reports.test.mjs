@@ -1,6 +1,8 @@
 /**
- * Exercises schedule validation, timezone/DST behavior, authorization, retry idempotency, and delivery leases.
- * Fixed times and mocked mail responses keep report tests repeatable without sending messages.
+ * Checks report settings, delivery times, timezone changes, owner permissions, and retries. It
+ * also checks that two send attempts do not take the same report at once.
+ * Tests use chosen dates and pretend email responses, so results are repeatable and no real
+ * reports are emailed.
  */
 import test from "node:test";
 import assert from "node:assert/strict";

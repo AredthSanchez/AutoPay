@@ -1,6 +1,8 @@
 /**
- * Owns email/password authentication, recovery, and business selection before mounting the workspace.
- * Browser session state improves navigation; server-side identity and membership checks remain authoritative.
+ * Shows the sign-up, login, and password-recovery screens. After login, it lets the person
+ * create, join, or choose a business before opening its invoices.
+ * The browser remembers the login, but the server still checks who the person is and which
+ * business they may access.
  */
 import React, { Suspense, lazy, useEffect, useRef, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
@@ -32,7 +34,8 @@ export default function AuthShell() {
     [recovery, setRecovery] = useState(path === "/reset-password");
   const mounted = useRef(false),
     sequence = useRef(0);
-  // Ignore profile responses from older requests or a component that has already unmounted.
+  // Only use the latest profile response. An older response must not replace a newer login or
+  // update a screen that has closed.
   async function loadProfile() {
     const seq = ++sequence.current;
     try {
@@ -70,7 +73,8 @@ export default function AuthShell() {
           setLoading(false);
           return;
         }
-        // Only the publishable project key reaches the browser. The Worker verifies the session token separately.
+        // Give the browser only the public login-service key. The server separately checks the
+        // temporary login proof sent with each request.
         const auth = createClient(config.supabaseUrl, config.supabasePublishableKey, {
           auth: {
             flowType: "pkce",
@@ -85,7 +89,8 @@ export default function AuthShell() {
           if (error) throw error;
           return data.session?.access_token || null;
         });
-        // Defer profile loading outside the auth callback; invalidate pending responses when signing out.
+        // Wait until the login notification finishes before loading the profile. On logout,
+        // ignore any profile requests still in progress.
         subscription = auth.auth.onAuthStateChange((event) => {
           if (event === "PASSWORD_RECOVERY") setRecovery(true);
           if (event === "SIGNED_OUT") {
@@ -180,7 +185,8 @@ export default function AuthShell() {
       }
     });
   }
-  // A confirmed identity either creates its own business or redeems an email-bound invitation.
+  // After confirming their email, a person can create a business or accept an invitation sent
+  // to that same email address.
   async function createWorkspace(e) {
     e.preventDefault();
     await run(async () => {
@@ -193,7 +199,7 @@ export default function AuthShell() {
       location.assign("/");
     });
   }
-  // Clear the saved business choice after ending the Supabase session; server checks still protect records.
+  // After logging out, forget the last selected business so the next login starts cleanly.
   async function signOut() {
     await run(async () => {
       if (client) {

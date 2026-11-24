@@ -1,6 +1,8 @@
 /**
- * Read-only deployment preflight for checked-in Cloudflare IDs, public auth configuration, and testing mode.
- * This does not verify remote migrations, secret availability, or actual mail delivery.
+ * Checks the saved hosting settings before publishing, including the Cloudflare account,
+ * database, login setup, and free chat mode.
+ * It only reads configuration. It does not check whether the live database is up to date,
+ * secrets are installed, or emails actually arrive.
  */
 import { readFileSync } from "node:fs";
 import { authConfig } from "../worker/auth.mjs";

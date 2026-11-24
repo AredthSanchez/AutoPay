@@ -1,6 +1,8 @@
 /**
- * In-memory integration harness: applies all D1 migrations to SQLite and adapts it to the D1 query API.
- * Requests use explicit test identities; the fake bucket avoids real object-storage and network side effects.
+ * Creates a temporary database and pretend file storage for automated tests. The database exists
+ * only in memory, not in a real business account.
+ * It also builds test requests so other tests can act as different people and check who may
+ * access each business.
  */
 import { DatabaseSync } from "node:sqlite";
 import { readFileSync } from "node:fs";

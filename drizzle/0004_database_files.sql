@@ -1,5 +1,5 @@
--- Adds D1 attachment metadata and ordered binary chunks for the optional database-backed file adapter.
--- Apply migrations in numeric order; add a new migration for future schema changes.
+-- Adds tables that describe each uploaded file and store its contents in numbered pieces.
+-- Run these numbered database updates in order. Add a new file for future table changes.
 CREATE TABLE file_objects (
   key text PRIMARY KEY NOT NULL,
   size integer NOT NULL,

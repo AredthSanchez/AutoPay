@@ -1,6 +1,8 @@
 /**
- * Main business workspace: navigation, invoice/client views, bulk actions, and record dialogs.
- * Form components collect edits; api.js sends them to the server for validation and persistence.
+ * Builds the main AutoPay screen: invoice lists, client details, navigation, search, and forms
+ * that open in dialogs.
+ * It remembers what the person is viewing and has selected. When they save, it asks the server
+ * to check and store their changes.
  */
 "use client";
 import ClearableSelect from "../clearable-select";
@@ -73,7 +75,8 @@ const Badge = ({ invoice }) => (
     {{ OPEN: "Pending", OVERDUE: "Overdue", PAID: "Paid", VOID: "Void" }[status(invoice)]}
   </span>
 );
-// Own the active view and cached records; refresh after server mutations to reflect shared business state.
+// Remember the open screen and loaded records. After saving changes, reload the records so the
+// display matches what the business has stored.
 function App({ account, business, businesses, switchBusiness, onSignOut }) {
   const [rowInvoiceId, setRowInvoiceId] = useState(null),
     [quickView, setQuickView] = useState("all"),
@@ -198,7 +201,8 @@ function App({ account, business, businesses, switchBusiness, onSignOut }) {
   function toggleChecked(id) {
     setChecked((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
   }
-  // Track per-invoice failures so unsuccessful rows remain available for retry.
+  // When updating several invoices, remember which ones failed so the person can select them
+  // again and retry.
   async function bulk(action, ids = checkedIds, payment) {
     if (!ids.length) return;
     setBusy(true);
@@ -235,7 +239,8 @@ function App({ account, business, businesses, switchBusiness, onSignOut }) {
                 : `${ids.length} attention flags cleared`,
       );
   }
-  // Export the selected rows when present; otherwise use the current filtered invoice view.
+  // Download checked invoices if any are selected. Otherwise, download the invoices that match
+  // the current filters.
   function exportExcel() {
     const rows = checkedInvoices.length ? checkedInvoices : filtered;
     downloadWorkbook(invoiceWorkbook(rows, paymentLabels), "autopay-invoices.xlsx");
@@ -1803,7 +1808,8 @@ function Stat({ label, amount, sub, icon: I, tone = "" }) {
     </div>
   );
 }
-// Shared native modal dialog; handles Escape/backdrop dismissal and closes the dialog on unmount.
+// Open a form in a centered dialog. Close it when Escape is pressed, the outside area is
+// clicked, or the form leaves the screen.
 function Modal({ title, onClose, children }) {
   const ref = useRef();
   useEffect(() => {
@@ -1841,7 +1847,8 @@ function Modal({ title, onClose, children }) {
     </dialog>
   );
 }
-// Collect editable invoice fields and line items. The API recalculates totals and validates status transitions.
+// Show fields for invoice details and the items being billed. Before saving, the server checks
+// the entries and calculates the total again.
 function InvoiceForm({
   onSave,
   busy,
@@ -2194,7 +2201,8 @@ function InvoiceForm({
     </form>
   );
 }
-// A simulation is bookkeeping only. The current Worker explicitly rejects live collection calls.
+// This dialog can demonstrate a collection call. The current server does not place a real call
+// or collect money.
 function VoiceDialog({ invoice, live, busy, onRun, onSetup }) {
   const [outcome, setOutcome] = useState("success"),
     [consent, setConsent] = useState(false);
@@ -2261,7 +2269,8 @@ function VoiceDialog({ invoice, live, busy, onRun, onSetup }) {
   );
 }
 export default App;
-// Client profile fields are separate from the owner-only banking form below.
+// Edit the client's ordinary contact and business details here. Bank details use a separate
+// form available only to the business owner.
 function ClientForm({ onSave, busy, initialClient }) {
   const [d, setD] = useState({
       name: initialClient?.name || "",
@@ -2370,7 +2379,7 @@ function ClientForm({ onSave, busy, initialClient }) {
     </form>
   );
 }
-// Edit invoice notes without replacing the other invoice fields.
+// Save a change to the invoice notes while leaving its other details alone.
 function NotesForm({ invoice, onSave, busy }) {
   const [notes, setNotes] = useState(invoice.notes || ""),
     [error, setError] = useState("");
@@ -2413,7 +2422,8 @@ function NotesForm({ invoice, onSave, busy }) {
     </form>
   );
 }
-// Display setup requirements and current backend capability; this screen does not provision Twilio.
+// Explain what would be needed to enable real calls. This screen does not create or connect a
+// Twilio phone-service account.
 function VoiceSetup({ setup, live, refresh }) {
   const [step, setStep] = useState(0);
   const steps = [
@@ -2558,7 +2568,8 @@ function VoiceSetup({ setup, live, refresh }) {
   );
 }
 
-// Edits payment metadata for an invoice already marked paid; it does not process a charge.
+// Change the payment method or reference on an invoice already marked paid. This only updates
+// the record; it does not charge anyone.
 function PaymentForm({ invoice, onSave, busy }) {
   const [method, setMethod] = useState(
       ["CHECK", "ACH", "BANK_TRANSFER", "CARD", "CASH", "OTHER"].includes(invoice.paymentMethod)
@@ -2618,7 +2629,8 @@ function PaymentForm({ invoice, onSave, busy }) {
     </form>
   );
 }
-// List, upload, download, and remove files through the authenticated invoice-scoped API.
+// Show and manage this invoice's files. Every upload, download, and removal goes through the
+// server's login and business-access checks.
 function Attachments({ invoice, onUpdate }) {
   const [files, setFiles] = useState([]),
     [busy, setBusy] = useState(false),
@@ -2762,7 +2774,8 @@ function Attachments({ invoice, onUpdate }) {
     </section>
   );
 }
-// Controlled filters keep the clear action and invoice view in sync.
+// The parent screen remembers these filter values, so clearing a field also updates which
+// invoices are shown.
 function InvoiceFilters({ values, onChange, statusFilter, setStatus, clear }) {
   const update = (key, value) => onChange({ ...values, [key]: value });
   const invalid =
@@ -2900,7 +2913,7 @@ function InvoiceFilters({ values, onChange, statusFilter, setStatus, clear }) {
     </div>
   );
 }
-// Deletion is reversible: these rows remain stored and can be restored through the API.
+// Show invoices moved to Trash. They are still saved in the database and can be restored.
 function TrashInvoices({ invoices, busy, restore }) {
   return (
     <div className="panel activitypanel">
@@ -2927,7 +2940,8 @@ function TrashInvoices({ invoices, busy, restore }) {
     </div>
   );
 }
-// Search the loaded business records and route selections to invoice or client details.
+// Look through this business's loaded invoices and clients. Open the matching details when a
+// person chooses a result.
 function WorkspaceSearch({ invoices, clients, onInvoice, onClient }) {
   const [query, setQuery] = useState("");
   const results = workspaceMatches(query, invoices, clients),
@@ -3022,7 +3036,8 @@ function WorkspaceSearch({ invoices, clients, onInvoice, onClient }) {
     </div>
   );
 }
-// Bank details are fetched only through the owner-authorized endpoint, not the general client list.
+// Request private bank details separately from the ordinary client list. The server allows only
+// the business owner to read or save them.
 function BankForm({ client, onUpdated }) {
   const [details, setDetails] = useState(null),
     [bank, setBank] = useState({
@@ -3171,7 +3186,8 @@ function BankForm({ client, onUpdated }) {
     </form>
   );
 }
-// Show the saved client profile and navigation to edits, banking, and related invoices.
+// Show the client's saved information and buttons to edit it, open bank details, or view their
+// invoices.
 function ClientDetails({ client, edit, bank, invoice }) {
   return (
     <div className="client-detail">
@@ -3235,7 +3251,8 @@ function ClientDetails({ client, edit, bank, invoice }) {
   );
 }
 
-// Capture a manual bookkeeping payment for selected open invoices; no transfer is initiated.
+// Record that selected unpaid invoices were paid outside AutoPay, including the payment method
+// and date. This form does not move money.
 function RecordPayment({ count, busy, onSave }) {
   const [payment, setPayment] = useState({
       paymentDate: localDate(),

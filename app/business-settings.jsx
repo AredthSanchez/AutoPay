@@ -1,6 +1,8 @@
 /**
- * Business settings screens for team membership, invitation links, invoice alerts, and the business profile.
- * Owner-only controls are also enforced by the API; hiding a control is not an authorization boundary.
+ * Builds the business settings screens: team members, invitations, new-invoice emails, and
+ * business contact details.
+ * Some settings are for the owner only. The server checks that permission even if someone tries
+ * to bypass the buttons on this screen.
  */
 "use client";
 import React, { useEffect, useState } from "react";
@@ -16,7 +18,8 @@ export default function BusinessSettings({ business, account }) {
     [busy, setBusy] = useState(false),
     [message, setMessage] = useState(""),
     [error, setError] = useState("");
-  // Fetch team and notification settings for the currently selected business.
+  // Load this business's team members and invoice-email settings so they can be shown on the
+  // settings screen.
   async function load() {
     try {
       const [t, s, n] = await Promise.all([
@@ -262,7 +265,8 @@ export default function BusinessSettings({ business, account }) {
     </section>
   );
 }
-// Keep business profile edits separate from account display-name edits.
+// Business contact details and a person's account name are different records and are saved
+// separately.
 function BusinessProfile({ business, account }) {
   const [profile, setProfile] = useState(null),
     [myName, setMyName] = useState(account.name),

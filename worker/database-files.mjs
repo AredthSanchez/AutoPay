@@ -1,9 +1,12 @@
 /**
- * D1-backed implementation of the attachment bucket interface used when no R2 binding is supplied.
- * Authorization belongs to the service layer; this adapter only stores and streams bytes by key.
+ * Saves invoice attachments in Cloudflare D1, AutoPay's database, when separate R2 file storage
+ * is not configured.
+ * This file stores and retrieves file contents. service.mjs first checks that the person is
+ * allowed to access the invoice.
  */
-// Small testing-workspace file storage. R2 can replace this without changing the
-// scoped attachments API. Chunking keeps every D1 row below its size limit.
+// For this testing version, store files in the database as small pieces so each
+// piece fits its size limit. R2, a separate file-storage service, can replace this
+// later without changing how invoice screens ask the server for attachments.
 const CHUNK = 128 * 1024,
   MAX_FILE = 5 * 1024 * 1024;
 export class DatabaseFiles {
@@ -13,7 +16,8 @@ export class DatabaseFiles {
   q(sql, ...values) {
     return this.db.prepare(sql).bind(...values);
   }
-  // Insert metadata and all chunks in a database batch so partial files are not published.
+  // Save the file information and all its pieces together, so a failed save does not leave a
+  // file with missing pieces.
   async put(key, body) {
     const bytes = new Uint8Array(await new Response(body).arrayBuffer());
     if (bytes.length > MAX_FILE) throw Error("File exceeds 5 MB.");
@@ -30,7 +34,8 @@ export class DatabaseFiles {
       ),
     ]);
   }
-  // Read one ordered chunk per stream pull instead of loading the entire file into a response buffer.
+  // Send the saved file one piece at a time, in order, instead of loading the whole file into
+  // memory first.
   async get(key) {
     const object = await this.q("SELECT size,chunks FROM file_objects WHERE key=?", key).first();
     if (!object) return null;
@@ -61,7 +66,7 @@ export class DatabaseFiles {
       }),
     };
   }
-  // Remove dependent chunks before their parent object metadata.
+  // Delete the file pieces first, then remove the record that describes the file.
   async delete(key) {
     await this.db.batch([
       this.q("DELETE FROM file_chunks WHERE key=?", key),

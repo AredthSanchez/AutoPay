@@ -1,12 +1,15 @@
 /**
- * Cloudflare Worker entry point for public configuration, authenticated API requests, static assets, and cron.
- * Security headers are applied to every response returned through handle().
+ * Receives requests at AutoPay's web address. It sends login and invoice requests to the right
+ * server code and serves the website's built files.
+ * It also starts scheduled email reports and adds browser safety instructions to website
+ * responses.
  */
 import { runScheduledReports } from "../lib/autopay/reports.mjs";
 import { DatabaseFiles } from "./database-files.mjs";
 import { serve } from "../lib/autopay/service.mjs";
 import { authConfig, authenticatedUser, adoptMigratedIdentity, AuthUnavailable } from "./auth.mjs";
-// Allow connections to this origin and the configured auth origin; deny embedding and privileged browser features.
+// Tell the browser which servers this page may contact. Also block other sites from embedding
+// it and turn off camera, microphone, and location access.
 function secure(response, env) {
   const headers = new Headers(response.headers);
   headers.set("X-Content-Type-Options", "nosniff");
@@ -36,7 +39,8 @@ export async function handle(request, env) {
       },
       { headers: { "Cache-Control": "no-store" } },
     );
-  // Public boot configuration exposes only values that are safe for the browser SDK.
+  // Give the login screen only the public settings it needs to connect to Supabase. Never
+  // include server secrets in this response.
   else if (url.pathname === "/api/public-config" && request.method === "GET") {
     const c = authConfig(env);
     response = Response.json(
@@ -78,7 +82,8 @@ export async function handle(request, env) {
 }
 export default {
   fetch: handle,
-  // waitUntil keeps asynchronous report processing alive after the cron handler returns.
+  // Ask Cloudflare to keep this background task running until report processing finishes, even
+  // after the scheduled handler returns.
   async scheduled(controller, env, ctx) {
     ctx.waitUntil(
       runScheduledReports(env.DB, env).then((result) =>

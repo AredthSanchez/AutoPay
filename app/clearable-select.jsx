@@ -1,8 +1,11 @@
 /**
- * Select with a clear action. Supports a parent-controlled value or internal state seeded by defaultValue.
+ * Displays a dropdown with a button to clear or reset the choice.
+ * The screen using this dropdown can keep track of the choice itself, or let this component
+ * remember it.
  */
 import React, { Children, useState } from "react";
-// The clear control sends resetValue through the same onChange contract as the select.
+// Clicking clear chooses resetValue, usually an empty choice, and notifies the screen just like
+// choosing a dropdown option.
 export default function ClearableSelect({
   children,
   value,

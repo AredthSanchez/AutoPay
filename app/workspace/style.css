@@ -1,4 +1,4 @@
-/* Base workspace design: navigation, tables, dialogs, forms, and responsive layouts. */
+/* Controls the main workspace appearance: menus, tables, forms, dialogs, and layouts for different screen sizes. */
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap');
 
 :root {
@@ -2633,7 +2633,7 @@ body:has(dialog[open]) {
   }
 }
 
-/* Product palette: slate foundations, blue actions, semantic status colors. */
+/* Use dark blue-gray text and blue action buttons. Status colors help distinguish invoice states. */
 :root {
   background: #f6f8fb;
   color: #172b45;

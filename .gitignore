@@ -1,4 +1,4 @@
-# Dependencies/build output are reproducible; local credentials, databases, uploads, and exports stay private.
+# Keep generated files out of Git, along with private passwords, local databases, and exported business data.
 node_modules/
 dist/
 .wrangler/

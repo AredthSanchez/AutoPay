@@ -1,5 +1,6 @@
 /**
- * Unit coverage for invoice arithmetic, aging, inclusive filters, search, sorting, and duplication defaults.
+ * Checks invoice calculations and list behavior: prices, overdue days, date and amount filters,
+ * search, sorting, and copying an invoice into a new draft.
  */
 import test from "node:test";
 import assert from "node:assert/strict";

@@ -1,11 +1,11 @@
-# Local-only server environment template. Keep actual values in ignored .dev.vars, never in Git.
-# Copy to .dev.vars (ignored). Only public Supabase project values go below.
+# Example settings for running the server on your computer. Put real values in .dev.vars, which Git ignores.
+# These Supabase values identify the login service and are safe to share. Do not use a private administrator key.
 SUPABASE_URL=https://your-project.supabase.co
 SUPABASE_PUBLISHABLE_KEY=sb_publishable_your_key
 AUTOPAY_CHAT_MODE=testing
-# Generate a fresh 32-byte base64 encryption key for a NEW database.
-# For imported encrypted bank records, preserve their ORIGINAL key.
+# For a new database, create a 32-byte secret key encoded as base64 to protect bank details.
+# Existing protected bank details need their original key; replacing it makes those records unreadable.
 BANK_DATA_KEY=
-# Optional invoice alerts; use production secrets through wrangler secret put.
+# Optional email settings. For the live site, save these with wrangler secret put instead of committing them.
 RESEND_API_KEY=
 MAIL_FROM_EMAIL=

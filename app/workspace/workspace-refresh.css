@@ -1,5 +1,5 @@
-/* Later workspace visual overrides. Loaded after style.css, so selector specificity and order matter. */
-/* Workspace hierarchy: quiet navigation, readable data, and contextual actions. */
+/* Updates the base workspace styles. This file loads after style.css, allowing its matching rules to replace earlier styling. */
+/* Keep navigation simple, make invoice information readable, and place action buttons near the records they affect. */
 .shell {
   --ink: #18263c;
   --muted: #6b737f;

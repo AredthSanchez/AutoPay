@@ -1,6 +1,8 @@
 /**
- * Checks the Worker authentication boundary, public key restrictions, and explicit legacy identity adoption.
- * Supabase responses are mocked; these tests do not use production credentials or accounts.
+ * Checks that the server accepts only valid logins and handles accounts imported from the
+ * earlier app safely. It also checks that secret login-service keys are not exposed publicly.
+ * The login service is simulated, so these tests do not use real accounts or production
+ * credentials.
  */
 import test from "node:test";
 import assert from "node:assert/strict";
