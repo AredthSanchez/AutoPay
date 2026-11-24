@@ -104,7 +104,7 @@ These are platform APIs used by the code, not npm libraries selected separately.
 
 | Tool                           | Use                                                                                                                                 | Part of the running app?                                                  |
 | ------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
-| ChatGPT / Codex                | AI-assisted implementation, revisions, debugging, explanations, documentation, and test execution based on the user's requirements. | No. Optional OpenAI chat in the product is a separate integration.        |
+| Codex                | Planning, code revision, documentation, and testing based on the project requirements. | No. Optional OpenAI chat in the product is a separate integration.        |
 | Git                            | Tracks revisions and compares changes.                                                                                              | No.                                                                       |
 | GitHub connector/GitHub API    | Reads repository content and writes commits with branch-head checks.                                                                | No.                                                                       |
 | Terminal / shell               | Runs Git, npm, builds, checks, and inspection scripts.                                                                              | No.                                                                       |
@@ -120,7 +120,7 @@ These are platform APIs used by the code, not npm libraries selected separately.
 | `sql-formatter`                | Formatted SQL while checking that statement tokens stayed unchanged.                                                                | Temporary cleanup tool.                                                   |
 | Sites and Supabase connectors  | Project/hosting and identity-service setup during earlier development.                                                              | Development integrations, not browser dependencies.                       |
 
-This is an evidence-based inventory of the current source and the tools visible in this project's development history. It does not claim that every package in a generated template was actively used or that every test was performed manually by the project owner.
+This is an evidence-based inventory of the current source and the tools visible in this project's development history. Packages declared in an archived template are listed separately from the active application stack.
 
 ## Earlier implementation in the source archive
 

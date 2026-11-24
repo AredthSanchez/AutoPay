@@ -14,11 +14,7 @@ If asked where passwords are handled, explain that Supabase is the separate logi
 
 ## Development process and contribution
 
-A clear description of how this project was built:
-
-> I defined the product idea and directed the requirements through successive versions, including shared business access, editable invoices, client banking, reports, and chat. I used ChatGPT and Codex to help generate, revise, document, and test the implementation. I am studying the code and tests so I can explain the design and make informed changes.
-
-Adjust the final sentence as your understanding develops. Separate what you specified, what tools generated, what you can now explain, and what you personally tested. Do not claim to have independently written every module or designed a custom AI model. AI-assisted implementation does not prevent a technical discussion; being precise about the code and its limits is what makes that discussion useful.
+> I defined AutoPay's product idea and requirements, including shared business access, editable invoices, client banking, reports, and chat. I used Codex to help plan, revise, document, and test the implementation.
 
 ## Eight-minute presentation outline
 
@@ -32,7 +28,7 @@ Adjust the final sentence as your understanding develops. Separate what you spec
 | 4:30–5:30 | Technical details     | Integer-cent arithmetic, invoice version checks, attachment chunks, or email retries. Choose two you can explain deeply.                              |
 | 5:30–6:30 | Reports and chat      | Show settings/history and a free testing-mode question. Explain what is optional or simulated.                                                        |
 | 6:30–7:15 | Verification          | Show test names and one meaningful assertion, then build/test results.                                                                                |
-| 7:15–8:00 | Limits and next steps | Live calling is unavailable; discuss browser tests, data normalization, and stronger stale-form detection. State the AI-assisted development process. |
+| 7:15–8:00 | Limits and next steps | Live calling is unavailable; discuss browser tests, data normalization, and stronger stale-form detection. Explain the requirements and development tools used. |
 
 ## Demo preparation
 
@@ -238,6 +234,6 @@ Rehearse these without reading the answers first:
 7. Show where testing chat returns before a provider call.
 8. Identify two current limitations and propose a concrete change for each.
 9. Open one test and explain its setup, action, assertion, and what it does not prove.
-10. Describe your own contribution and AI assistance accurately, without claiming unperformed work.
+10. Describe the requirements you defined and how Codex supported planning, revisions, documentation, and testing.
 
 For each, give a short answer, locate the responsible function, and handle one follow-up. Mark any answer that still depends on memorizing a sentence and return to that code path. The documentation is a reference; the ability to trace a fresh example is the stronger check of understanding.
