@@ -1,7 +1,8 @@
 /**
- * Checks saved hosting identifiers, public login settings, and testing chat mode before
- * deployment.
- * Does not verify live database updates, installed secrets, or email delivery.
+ * Checks the hosting configuration before publishing the app. Looks for the Cloudflare account,
+ * database ID, public login settings, and free testing chat mode.
+ * Reports missing settings and stops the deployment check if needed. Does not test the live
+ * database, installed secrets, or email delivery.
  */
 import { readFileSync } from "node:fs";
 import { authConfig } from "../worker/auth.mjs";

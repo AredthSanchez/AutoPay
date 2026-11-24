@@ -1,6 +1,7 @@
 /**
- * Tests login verification, public-key restrictions, and imported account linking.
- * Supabase responses are mocked; production accounts and credentials are not used.
+ * Checks how the server handles valid and invalid logins, public login keys, and accounts
+ * imported from the earlier app. Confirms that old identity headers cannot grant access.
+ * Uses simulated Supabase responses instead of real accounts.
  */
 import test from "node:test";
 import assert from "node:assert/strict";

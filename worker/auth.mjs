@@ -1,7 +1,8 @@
 /**
- * Verifies logins through Supabase and links explicitly mapped accounts imported from the
- * earlier app.
- * Business access comes from database memberships, not editable profile names.
+ * Checks a user's login with Supabase before the server allows access to business records.
+ * Requires a confirmed email address and rejects invalid login tokens.
+ * Also links accounts imported from the earlier app, using mappings already saved in the
+ * database. Profile names do not determine access.
  */
 export class AuthUnavailable extends Error {}
 // Accept only a secure login-service address and a key intended to be public. Reject private

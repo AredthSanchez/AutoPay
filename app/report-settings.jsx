@@ -1,7 +1,7 @@
 /**
- * Report schedule settings and delivery history for the active business.
- * Owners can update recipients and delivery times, send test reports, and retry failed
- * deliveries.
+ * Displays the email address, delivery time, and daily or weekly schedule for business reports.
+ * Loads recent delivery attempts alongside these settings.
+ * Owners can save a schedule, send a test report, or retry a failed email.
  */
 import React, { useEffect, useState } from "react";
 import { request } from "./workspace/api";

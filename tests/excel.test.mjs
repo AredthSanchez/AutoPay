@@ -1,6 +1,7 @@
 /**
- * Checks spreadsheet amounts, text references, and safe handling of text that resembles an Excel
- * formula.
+ * Checks the contents of exported Excel files. Confirms that amounts are numbers, references
+ * keep their text, and text resembling a formula is not treated as one.
+ * Also checks an export with headings but no invoices.
  */
 import test from "node:test";
 import assert from "node:assert/strict";

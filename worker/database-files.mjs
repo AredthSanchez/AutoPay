@@ -1,6 +1,9 @@
 /**
- * Database storage for invoice attachments when R2 file storage is not configured.
- * The service checks invoice access before this module reads or writes file contents.
+ * Saves and retrieves invoice attachments using the database when separate R2 file storage is
+ * not configured. Splits files into small pieces for storage and sends those pieces back in
+ * order when downloading.
+ * Deletes the stored pieces when a file is removed. The invoice service checks access before
+ * asking this file to read or save an attachment.
  */
 // For this testing version, store files in the database as small pieces so each
 // piece fits its size limit. R2, a separate file-storage service, can replace this

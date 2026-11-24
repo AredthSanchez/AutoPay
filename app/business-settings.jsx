@@ -1,6 +1,8 @@
 /**
- * Business profile, team invitations, and invoice email settings.
- * Owner-only actions are checked by the server as well as restricted in the UI.
+ * Displays business contact details, team members, invitation links, and invoice email settings.
+ * Saves changes through the server.
+ * Only the business owner can change restricted settings; the server enforces that rule even if
+ * a request bypasses the screen.
  */
 "use client";
 import React, { useEffect, useState } from "react";

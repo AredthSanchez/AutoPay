@@ -1,5 +1,6 @@
 /**
- * Tests attachment storage, exact reconstruction from database chunks, and complete deletion.
+ * Checks that a file can be saved in database pieces, downloaded with exactly the same contents,
+ * and fully deleted. Includes a file large enough to need several pieces.
  */
 import test from "node:test";
 import assert from "node:assert/strict";

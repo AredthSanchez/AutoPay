@@ -1,6 +1,7 @@
 /**
- * Temporary SQLite database, test file storage, and request helpers for integration tests.
- * Uses explicit test identities without touching production business records.
+ * Creates the temporary database and file storage used by automated tests. Builds requests for
+ * different test users so access to each business can be checked.
+ * Everything stays in the test environment; production business records are not used.
  */
 import { DatabaseSync } from "node:sqlite";
 import { readFileSync } from "node:fs";

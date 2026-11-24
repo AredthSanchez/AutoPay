@@ -1,7 +1,8 @@
 /**
- * Shared browser requests for invoices, clients, and business settings.
- * Each request includes the current login token and selected business; the server verifies
- * access before returning or changing records.
+ * Sends requests from the screens to the server to load and save invoices, clients, and business
+ * settings. Includes the selected business and the current login token with each request.
+ * Also handles file uploads and downloads, and turns server errors into messages the screens can
+ * display.
  */
 export const backend = true;
 let currentBusiness = "";

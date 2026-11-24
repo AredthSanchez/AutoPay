@@ -1,6 +1,8 @@
 /**
- * Main workspace views, invoice selection, search, and record dialogs.
- * Forms submit changes to the server for validation and storage.
+ * Displays the main AutoPay workspace: dashboards, invoice and client lists, search, filters,
+ * and record details. Keeps track of checked invoices and runs actions on the selection.
+ * Contains the forms for creating and editing records, recording payments, managing files, and
+ * viewing bank details. Saving a form sends its changes to the server.
  */
 "use client";
 import ClearableSelect from "../clearable-select";

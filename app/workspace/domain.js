@@ -1,7 +1,8 @@
 /**
- * Shared invoice calculations, date rules, search, and sorting. These functions do not save
- * records.
- * OVERDUE is a display status calculated from an OPEN invoice and its due date.
+ * Calculates invoice totals, payment dates, and overdue days. Also finds matching invoices and
+ * clients, applies filters, sorts lists, and prepares copies of invoices.
+ * These calculations are shared by the screens and server so they follow the same rules. Nothing
+ * in this file saves changes to the database.
  */
 export const money = (n) =>
   new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(n);

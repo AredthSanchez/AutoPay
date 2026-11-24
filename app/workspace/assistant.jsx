@@ -1,7 +1,8 @@
 /**
- * Chat panel for invoice and client summaries in the active business.
- * The server selects the answering mode and supplies the records the assistant is allowed to
- * read.
+ * Displays the chat window, suggested questions, and answers about the business's invoices and
+ * clients. Sends questions and earlier messages to the server.
+ * The server supplies the records used for an answer and chooses between free testing mode and
+ * the optional OpenAI service.
  */
 "use client";
 import React, { useEffect, useRef, useState } from "react";

@@ -1,5 +1,7 @@
 /**
- * Tests invoice arithmetic, aging, filters, search, sorting, and duplicate-draft defaults.
+ * Checks invoice amounts, payment dates, overdue days, search, filters, and sorting against
+ * expected results. Also checks that copying an invoice creates a draft without its old payment
+ * history.
  */
 import test from "node:test";
 import assert from "node:assert/strict";

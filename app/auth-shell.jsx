@@ -1,6 +1,8 @@
 /**
- * Handles signup, login, password recovery, and business selection before loading the workspace.
- * The server verifies each login and checks business membership independently of browser state.
+ * Displays the login, signup, and password reset screens. After login, loads the user's
+ * businesses and opens the selected workspace.
+ * Also handles invitations and logout. The browser remembers the selection, but the server
+ * checks access to the business on every request.
  */
 import React, { Suspense, lazy, useEffect, useRef, useState } from "react";
 import { createClient } from "@supabase/supabase-js";

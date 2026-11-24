@@ -1,6 +1,7 @@
 /**
- * Dropdown with a reset button. Supports a value managed by its parent screen or its own
- * internal state.
+ * Adds a clear button beside a dropdown. Selecting an option or clicking clear updates the value
+ * used by the surrounding form.
+ * The form can supply the selected value, or the dropdown can keep track of it itself.
  */
 import React, { Children, useState } from "react";
 // Clicking clear chooses resetValue, usually an empty choice, and notifies the screen just like
