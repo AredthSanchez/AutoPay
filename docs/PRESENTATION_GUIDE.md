@@ -4,11 +4,11 @@ Use alongside the [code walkthrough](STUDY_GUIDE.md), [tool inventory](TOOLS_AND
 
 ## Explaining the diagrams out loud
 
-> The browser section contains the account and invoice screens. A form uses the shared request helper to send the current login token and business ID to Cloudflare. The Worker checks the token with Supabase, then the business service checks membership, validates the input, and reads or saves records in D1. File storage, reports, and chat are separate paths because they have different jobs.
+> React displays the invoice screen. Its request helper uses Fetch to send the form, login token, and business ID to Cloudflare Workers. The Worker checks the login with Supabase and checks business membership before reading or saving records in D1. Resend handles configured emails. Testing chat uses local JavaScript rules, while the optional OpenAI path is disabled by default.
 
-Use the architecture diagram to answer **which part is responsible?** Use the invoice sequence diagram to answer **what happens first, next, and on failure?** For the sequence, follow one call at a time from the Save button to HTTP 201, then explain why a failed email does not undo the saved invoice.
+The first diagram explains the tools used by the running application. The second explains development: Git/GitHub hold the project, Node.js/npm run commands, Vite builds the files, the Node test runner checks behavior, and Wrangler publishes to Cloudflare. Codex supports planning, revision, documentation, and testing.
 
-Be ready to identify the files behind the boxes: `api.js` sends requests, `worker/auth.mjs` verifies identity, `service.mjs` checks business access and saves records, and D1 holds the data. The optional paid chat path is dashed because it is disabled in the checked-in testing configuration.
+Use the invoice sequence diagram for the detailed order of function calls and replies. Follow the Save button to HTTP 201, then explain why email delivery is separate from saving the invoice.
 
 ## Project introduction
 

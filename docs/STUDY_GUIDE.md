@@ -9,62 +9,65 @@ This guide describes the root application in this repository. The older Java app
 Start with an action you can see: creating an invoice. You fill in a form and click Save. AutoPay checks the information, stores it, and shows the result. Three parts work together to do that.
 
 ```mermaid
-flowchart TB
-    subgraph Browser["Browser: screens and user actions"]
-        Account["Account screens<br/>auth-shell.jsx<br/>Login and business selection"]
-        Workspace["Invoice and client screens<br/>workspace/index.jsx<br/>Forms, filters, and record details"]
-        API["Request helper<br/>workspace/api.js<br/>Adds login token and business ID"]
-        Account -->|"Open selected business"| Workspace
-        Workspace -->|"Read or save records"| API
-    end
-    subgraph Server["Cloudflare Workers: code behind the screens"]
-        Entry["Request entry<br/>worker/index.mjs<br/>Receives /api requests"]
-        Identity["Login verification<br/>worker/auth.mjs<br/>Checks token and confirmed email"]
-        Service["Business rules<br/>lib/autopay/service.mjs<br/>Membership, owner permissions,<br/>field validation, invoice versions"]
-        Entry --> Identity
-        Identity -->|"Verified user"| Service
-    end
-    Auth["Supabase Auth<br/>Accounts, passwords, sessions"]
-    DB[("Cloudflare D1<br/>Businesses, memberships, invoices,<br/>clients, files, and email history")]
-    FileStore["Attachment adapter<br/>worker/database-files.mjs<br/>Stores and reads file pieces"]
-    Reports["Report processor<br/>lib/autopay/reports.mjs<br/>Schedule, summary, send, retry"]
-    Cron["Cloudflare schedule<br/>Runs every 15 minutes"]
-    Mail["Resend<br/>Email delivery service"]
-    LocalChat["Testing chat<br/>testing-chat.mjs<br/>Answers with local rules"]
-    PaidChat["Optional OpenAI request<br/>chat.mjs<br/>Restricted record summary"]
+flowchart TD
+    Screen["React + React DOM<br/>Displays invoice and client screens<br/>CSS styles them; Lucide supplies icons"]
+    Requests["JavaScript Fetch API<br/>Sends requests with login token<br/>and selected business"]
+    Worker["Cloudflare Workers<br/>Runs JavaScript server code<br/>Checks permissions and validates changes"]
+    Login["Supabase Auth<br/>Checks accounts and login tokens"]
+    Data[("Cloudflare D1 / SQLite<br/>Stores businesses, invoices, clients,<br/>file contents, and email history")]
+    Email["Resend<br/>Sends invoice alerts and reports<br/>when email is configured"]
+    Testing["JavaScript testing assistant<br/>Answers supported questions<br/>without calling OpenAI"]
+    OpenAI["OpenAI Responses API<br/>Optional paid chat answers<br/>Disabled in testing mode"]
 
-    Account -->|"Signup, login, recovery"| Auth
-    API -->|"HTTP request"| Entry
-    Identity -->|"Ask whether token is valid"| Auth
-    Service -->|"Read or update business records"| DB
-    Service -->|"File operations"| FileStore
-    FileStore -->|"Store or stream chunks"| DB
-    Service -->|"Invoice email when enabled"| Mail
-    Service -->|"Default chat mode"| LocalChat
-    Service -.->|"Only when paid mode is enabled"| PaidChat
-    Cron --> Reports
-    Reports -->|"Read schedules; save send attempts"| DB
-    Reports -->|"Submit report email"| Mail
+    Screen -->|"Read or save"| Requests
+    Requests -->|"HTTP request"| Worker
+    Worker -->|"Verify login"| Login
+    Worker -->|"Read or update using SQL"| Data
+    Worker -->|"Email when enabled"| Email
+    Worker -->|"Default chat mode"| Testing
+    Worker -.->|"Only if enabled"| OpenAI
 ```
 
-### Reading this diagram
+### How to read it
 
-The two large boxes separate code running in the browser from code running on Cloudflare. Smaller boxes name the files responsible for each job. Follow the path **invoice screen → request helper → request entry → login verification → business rules → database** for an ordinary invoice operation.
+Start at **React**, follow **Fetch**, then **Cloudflare Workers**. That is the main path from a button click to the server. The server checks the login with **Supabase**, checks business membership in **D1**, and reads or saves the allowed records. Replies return along the same path to update the screen; return arrows are omitted to keep this diagram clear.
 
-Arrows show requests or handoffs. Replies usually travel back along the same path and are left out here to keep the architecture readable. A dashed arrow marks the optional paid chat path. The account screen talks directly to Supabase for login; invoice requests go through AutoPay's server, which verifies the login again before checking business access.
+Each box starts with the tool name and then states its job. Solid arrows are normal calls; the dashed arrow marks optional paid chat. Email also requires configuration. The diagram shows supported connections, not proof that every optional service is active.
 
-| Component                       | Why it is separate                                                                                                                                        |
-| ------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Account screens                 | Manage login and business selection before opening invoice records.                                                                                       |
-| Request helper                  | Adds the current token and business ID consistently instead of repeating that code in every form.                                                         |
-| Worker entry and identity check | Receive requests and establish who is logged in. They do not replace business permissions.                                                                |
-| Business service                | Checks membership and fields, applies invoice rules, and decides which records may be read or changed.                                                    |
-| D1 database                     | Keeps records after the browser closes. Its membership rows connect users to businesses.                                                                  |
-| File adapter                    | Handles attachment bytes separately from the invoice's file listing. Uses D1 chunks by default; R2 can replace storage after configuration and migration. |
-| Report processor                | Runs without an open browser and tracks delivery attempts for retries.                                                                                    |
-| Chat paths                      | Default testing mode uses local rules. Optional paid mode calls OpenAI with a restricted summary. Neither path can change invoices.                       |
+The login screen uses **@supabase/supabase-js** to communicate with Supabase for signup, login, and password recovery. That direct account setup happens before the invoice-request flow shown above. **Supabase checks identity; AutoPay's Worker checks business access.**
 
-The diagram represents the current source and configuration, not proof that every optional external service is enabled. The full tool descriptions are in [Tools and services](TOOLS_AND_SERVICES.md).
+Attachments currently use D1 storage through `DatabaseFiles`. **Cloudflare R2** is an optional replacement for file contents, not a configured part of this diagram. Scheduled reports use **Cloudflare Cron Triggers** to start report processing every 15 minutes, even when the browser is closed.
+
+| Diagram tool          | Main file to open                                                |
+| --------------------- | ---------------------------------------------------------------- |
+| React screens         | `app/auth-shell.jsx` and `app/workspace/index.jsx`               |
+| Fetch request helper  | `app/workspace/api.js`                                           |
+| Cloudflare Worker     | `worker/index.mjs` and `lib/autopay/service.mjs`                 |
+| Supabase login checks | `worker/auth.mjs`                                                |
+| D1 queries and SQL    | `lib/autopay/service.mjs` and `drizzle/*.sql`                    |
+| Resend emails         | `lib/autopay/reports.mjs` and notification code in `service.mjs` |
+| Testing chat          | `lib/autopay/testing-chat.mjs`                                   |
+| Optional OpenAI calls | `lib/autopay/chat.mjs`                                           |
+
+### Tools used to build and check the app
+
+These tools prepare the project; they are not extra steps taken every time a user saves an invoice.
+
+```mermaid
+flowchart TD
+    Source["Project files<br/>Tracked with Git and stored on GitHub<br/>Codex supports planning, revision,<br/>documentation, and testing"]
+    Commands["Node.js + npm<br/>Run development commands<br/>and install project packages"]
+    Tests["Node test runner + SQLite<br/>Check calculations and server behavior<br/>using temporary test records"]
+    Build["Vite + React and Cloudflare plugins<br/>Prepare browser and server files"]
+    Deploy["Wrangler<br/>Publish to Cloudflare<br/>and manage hosting configuration"]
+
+    Source --> Commands
+    Commands -->|"npm test"| Tests
+    Commands -->|"npm run build"| Build
+    Build -->|"Deployment after checks"| Deploy
+```
+
+**Git records changes; GitHub stores the repository. Node.js runs the local tools; npm starts their commands. Vite builds; Wrangler publishes.** Tests check expected behavior before changes are released. The [tool inventory](TOOLS_AND_SERVICES.md) lists exact packages and separates the older archived implementation.
 
 ### Exact order when an invoice is created
 
