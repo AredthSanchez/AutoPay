@@ -1,5 +1,7 @@
 # AutoPay: Complete Project Guide
 
+For code walkthroughs, presentation practice, and technical follow-ups, see the [Study Guide](STUDY_GUIDE.md), [Presentation Guide](PRESENTATION_GUIDE.md), and [Tool Inventory](TOOLS_AND_SERVICES.md).
+
 See the [File-by-file Guide](FILE_GUIDE.md) for the complete tracked-file index and inline-comment conventions.
 
 This guide explains the current application, its source files, data model, request flows, configuration, deployment, tests, and practical limits. It describes the implementation present in this repository since **November 23, 2026**. Configuration examples contain names and placeholders, never private credentials or exported business records.

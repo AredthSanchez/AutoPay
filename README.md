@@ -8,6 +8,12 @@ For a complete explanation of the architecture, every source module, database ta
 
 For an exhaustive index of every tracked file and its responsibilities, read the [File-by-file Guide](docs/FILE_GUIDE.md).
 
+## Study and presentation material
+
+- [Architecture and code walkthrough](docs/STUDY_GUIDE.md)
+- [Presentation outline and technical questions](docs/PRESENTATION_GUIDE.md)
+- [Tools, services, and dependency inventory](docs/TOOLS_AND_SERVICES.md)
+
 ## Features
 
 - Supabase email/password signup and login, email verification, password recovery and logout.
