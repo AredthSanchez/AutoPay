@@ -1,6 +1,5 @@
 # AutoPay: Complete Project Guide
 
-For code walkthroughs, presentation practice, and technical follow-ups, see the [Study Guide](STUDY_GUIDE.md), [Presentation Guide](PRESENTATION_GUIDE.md), and [Tool Inventory](TOOLS_AND_SERVICES.md).
 
 See the [File-by-file Guide](FILE_GUIDE.md) for the complete tracked-file index and inline-comment conventions.
 
