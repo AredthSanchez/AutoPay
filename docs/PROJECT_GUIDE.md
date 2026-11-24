@@ -39,17 +39,17 @@ AutoPay gives a business one place to maintain clients, invoices, payment record
 
 The active application uses **React + Vite**, **Cloudflare Workers**, **Cloudflare D1**, and **Supabase Auth**. It does not depend on ChatGPT login or the previous Sites hosting runtime.
 
-| Capability | Current behavior |
-| --- | --- |
-| Accounts | Email/password signup, login, confirmation, recovery, and logout through Supabase. |
-| Shared workspaces | Multiple businesses, each with owner/member access. |
-| Invoices | Create, edit, search, filter, print, export, move to Trash, and restore. |
-| Clients | Create and edit profiles, contact details, addresses, websites, and notes. |
-| Banking | Owner-only bank editor with encrypted server storage and masked directory responses. |
-| Attachments | Up to 5 MiB per file, currently stored in D1 chunks. R2 is optional. |
-| Invoice alerts | Resend integration with a durable notification record and manual retries. |
-| Assistant | Free, rule-based summaries calculated within AutoPay. |
-| OpenAI | Optional server integration retained in source; disabled in the deployed testing configuration. |
+| Capability               | Current behavior                                                                                                                             |
+| ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| Accounts                 | Email/password signup, login, confirmation, recovery, and logout through Supabase.                                                           |
+| Shared workspaces        | Multiple businesses, each with owner/member access.                                                                                          |
+| Invoices                 | Create, edit, search, filter, print, export, move to Trash, and restore.                                                                     |
+| Clients                  | Create and edit profiles, contact details, addresses, websites, and notes.                                                                   |
+| Banking                  | Owner-only bank editor with encrypted server storage and masked directory responses.                                                         |
+| Attachments              | Up to 5 MiB per file, currently stored in D1 chunks. R2 is optional.                                                                         |
+| Invoice alerts           | Resend integration with a durable notification record and manual retries.                                                                    |
+| Assistant                | Free, rule-based summaries calculated within AutoPay.                                                                                        |
+| OpenAI                   | Optional server integration retained in source; disabled in the deployed testing configuration.                                              |
 | Calls and money movement | Simulated voice results and manual bookkeeping. The current Worker does not call clients, charge accounts, transfer money, or issue refunds. |
 
 Creating a Supabase account and creating an AutoPay business are separate steps. An existing business is joined using an invitation or an explicit imported-account mapping.
@@ -95,46 +95,46 @@ A normal API request follows this path:
 
 The normal source tree at the repository root is the active application. `AutoPay-source.zip` is a historical source archive.
 
-| File or directory | Responsibility |
-| --- | --- |
-| [index.html](../index.html) | HTML entry document, page title, description, viewport, and React root. |
-| [src/main.jsx](../src/main.jsx) | Mounts the authentication shell using React's `createRoot`. |
-| [app/auth-shell.jsx](../app/auth-shell.jsx) | Supabase client setup, session events, login/signup/recovery forms, onboarding, invitation handling, business selection, and logout. Loads the workspace lazily. |
-| [app/auth.css](../app/auth.css) | Authentication layout, form sizing, responsive styling, notices, and setup states. |
-| [app/workspace/index.jsx](../app/workspace/index.jsx) | Main workspace and its view state, overview, invoice table/details, forms, client directory/profiles, shared dialogs, file manager, and voice setup presentation. |
-| [app/workspace/style.css](../app/workspace/style.css) | Workspace branding, tables, responsive navigation, forms, centered dialogs, printing, and assistant styles. |
-| [app/workspace/api.js](../app/workspace/api.js) | API request helper, token provider, selected-business header, invoice/client operations, and attachment upload/download. |
-| [app/workspace/workspace-refresh.css](../app/workspace/workspace-refresh.css) | Workspace visual hierarchy, responsive toolbar, compact table, contextual bulk actions, and mobile presentation. |
-| [app/clearable-select.jsx](../app/clearable-select.jsx) | Reusable dropdown with an explicit clear/reset control and required-field placeholder. |
-| [app/report-settings.jsx](../app/report-settings.jsx) | Owner-managed report recipient, schedule, saved delivery time, manual send, and history/retry UI. |
-| [lib/autopay/reports.mjs](../lib/autopay/reports.mjs) | Timezone-aware schedule calculation, scoped report generation, durable outbox, leases, retries, and Resend delivery. |
-| [app/workspace/excel.js](../app/workspace/excel.js) | Creates an Excel OOXML workbook and downloads it without an external API or runtime spreadsheet dependency. |
-| [app/workspace/domain.js](../app/workspace/domain.js) | Money validation, line-item totals, derived overdue status, dates, aging, filter matching, search matching, and a retained sample-data helper. |
-| [app/business-settings.jsx](../app/business-settings.jsx) | Account/business profile forms, team listing, invitation-link creation, notification preferences, notification status, and retry controls. |
-| [app/workspace/assistant.jsx](../app/workspace/assistant.jsx) | Chat interface, suggested questions, conversation state, busy/error states, and testing/provider-mode explanations. |
-| [worker/index.mjs](../worker/index.mjs) | Worker entry point, public configuration and health endpoints, API dispatch, storage-adapter selection, static assets, and response security headers. |
-| [worker/auth.mjs](../worker/auth.mjs) | Public-key configuration validation, server-side Supabase identity verification, and imported identity adoption. |
-| [worker/database-files.mjs](../worker/database-files.mjs) | D1-backed file adapter exposing `put`, `get`, and `delete`. Splits files into 128 KiB chunks. |
-| [lib/autopay/service.mjs](../lib/autopay/service.mjs) | Main business API: validation, authorization, invoices, clients, banking, files, team invitations, email outbox, and assistant routing. |
-| [lib/autopay/bank.mjs](../lib/autopay/bank.mjs) | Bank-field validation and AES-GCM encryption/decryption. |
-| [lib/autopay/testing-chat.mjs](../lib/autopay/testing-chat.mjs) | Deterministic question recognition and invoice/client report formatting. |
-| [lib/autopay/chat.mjs](../lib/autopay/chat.mjs) | Sanitized report snapshots and optional server-only OpenAI Responses API requests. |
-| [drizzle/](../drizzle/) | Ordered SQL migrations applied to D1 by Wrangler. The active app uses prepared SQL directly. |
-| [vite.config.js](../vite.config.js) | React and Cloudflare Vite plugins, local host, and polling-based development watching. |
-| [wrangler.jsonc](../wrangler.jsonc) | Worker identity, account/database bindings, static-asset routing, public Supabase configuration, observability, and testing-mode selection. |
-| [scripts/check-deployment.mjs](../scripts/check-deployment.mjs) | Deployment preflight for account/database IDs, safe Supabase configuration, and the testing-mode guard. |
-| [package.json](../package.json) | Runtime/tool dependencies and development, testing, migration, and deployment commands. |
-| [package-lock.json](../package-lock.json) | Reproducible npm dependency resolution. |
-| [.gitignore](../.gitignore) | Excludes credentials, local state, exports, generated output, and dependencies. |
-| [.dev.vars.example](../.dev.vars.example) | Placeholder names for local Worker configuration; contains no working secret. |
-| [tests/helpers.mjs](../tests/helpers.mjs) | In-memory SQLite/D1-style test adapter, migration setup, fake file bucket, and API-call helper. |
-| [tests/business-isolation.test.mjs](../tests/business-isolation.test.mjs) | Workspace isolation, membership/invitations, notifications, attachments, banking, and assistant tests. |
-| [tests/domain.test.js](../tests/domain.test.js) | Money, validation, date/aging, filtering, and search tests. |
-| [tests/independent-auth.test.mjs](../tests/independent-auth.test.mjs) | Supabase token verification, rejection of old identity headers, safe public configuration, and imported ownership adoption. |
-| [tests/database-files.test.mjs](../tests/database-files.test.mjs) | Binary file integrity across chunks, missing-object behavior, and complete chunk deletion. |
-| [docs/MIGRATION.md](MIGRATION.md) | Historical migration details and cutover considerations. |
-| [README.md](../README.md) | Short setup, development, and deployment instructions. |
-| [AutoPay-source.zip](../AutoPay-source.zip) | Earlier implementation archive, including legacy hosting/Java reference material. It is not the deployed runtime. |
+| File or directory                                                             | Responsibility                                                                                                                                                    |
+| ----------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [index.html](../index.html)                                                   | HTML entry document, page title, description, viewport, and React root.                                                                                           |
+| [src/main.jsx](../src/main.jsx)                                               | Mounts the authentication shell using React's `createRoot`.                                                                                                       |
+| [app/auth-shell.jsx](../app/auth-shell.jsx)                                   | Supabase client setup, session events, login/signup/recovery forms, onboarding, invitation handling, business selection, and logout. Loads the workspace lazily.  |
+| [app/auth.css](../app/auth.css)                                               | Authentication layout, form sizing, responsive styling, notices, and setup states.                                                                                |
+| [app/workspace/index.jsx](../app/workspace/index.jsx)                         | Main workspace and its view state, overview, invoice table/details, forms, client directory/profiles, shared dialogs, file manager, and voice setup presentation. |
+| [app/workspace/style.css](../app/workspace/style.css)                         | Workspace branding, tables, responsive navigation, forms, centered dialogs, printing, and assistant styles.                                                       |
+| [app/workspace/api.js](../app/workspace/api.js)                               | API request helper, token provider, selected-business header, invoice/client operations, and attachment upload/download.                                          |
+| [app/workspace/workspace-refresh.css](../app/workspace/workspace-refresh.css) | Workspace visual hierarchy, responsive toolbar, compact table, contextual bulk actions, and mobile presentation.                                                  |
+| [app/clearable-select.jsx](../app/clearable-select.jsx)                       | Reusable dropdown with an explicit clear/reset control and required-field placeholder.                                                                            |
+| [app/report-settings.jsx](../app/report-settings.jsx)                         | Owner-managed report recipient, schedule, saved delivery time, manual send, and history/retry UI.                                                                 |
+| [lib/autopay/reports.mjs](../lib/autopay/reports.mjs)                         | Timezone-aware schedule calculation, scoped report generation, durable outbox, leases, retries, and Resend delivery.                                              |
+| [app/workspace/excel.js](../app/workspace/excel.js)                           | Creates an Excel OOXML workbook and downloads it without an external API or runtime spreadsheet dependency.                                                       |
+| [app/workspace/domain.js](../app/workspace/domain.js)                         | Money validation, line-item totals, derived overdue status, dates, aging, filter matching, search matching, and a retained sample-data helper.                    |
+| [app/business-settings.jsx](../app/business-settings.jsx)                     | Account/business profile forms, team listing, invitation-link creation, notification preferences, notification status, and retry controls.                        |
+| [app/workspace/assistant.jsx](../app/workspace/assistant.jsx)                 | Chat interface, suggested questions, conversation state, busy/error states, and testing/provider-mode explanations.                                               |
+| [worker/index.mjs](../worker/index.mjs)                                       | Worker entry point, public configuration and health endpoints, API dispatch, storage-adapter selection, static assets, and response security headers.             |
+| [worker/auth.mjs](../worker/auth.mjs)                                         | Public-key configuration validation, server-side Supabase identity verification, and imported identity adoption.                                                  |
+| [worker/database-files.mjs](../worker/database-files.mjs)                     | D1-backed file adapter exposing `put`, `get`, and `delete`. Splits files into 128 KiB chunks.                                                                     |
+| [lib/autopay/service.mjs](../lib/autopay/service.mjs)                         | Main business API: validation, authorization, invoices, clients, banking, files, team invitations, email outbox, and assistant routing.                           |
+| [lib/autopay/bank.mjs](../lib/autopay/bank.mjs)                               | Bank-field validation and AES-GCM encryption/decryption.                                                                                                          |
+| [lib/autopay/testing-chat.mjs](../lib/autopay/testing-chat.mjs)               | Deterministic question recognition and invoice/client report formatting.                                                                                          |
+| [lib/autopay/chat.mjs](../lib/autopay/chat.mjs)                               | Sanitized report snapshots and optional server-only OpenAI Responses API requests.                                                                                |
+| [drizzle/](../drizzle/)                                                       | Ordered SQL migrations applied to D1 by Wrangler. The active app uses prepared SQL directly.                                                                      |
+| [vite.config.js](../vite.config.js)                                           | React and Cloudflare Vite plugins, local host, and polling-based development watching.                                                                            |
+| [wrangler.jsonc](../wrangler.jsonc)                                           | Worker identity, account/database bindings, static-asset routing, public Supabase configuration, observability, and testing-mode selection.                       |
+| [scripts/check-deployment.mjs](../scripts/check-deployment.mjs)               | Deployment preflight for account/database IDs, safe Supabase configuration, and the testing-mode guard.                                                           |
+| [package.json](../package.json)                                               | Runtime/tool dependencies and development, testing, migration, and deployment commands.                                                                           |
+| [package-lock.json](../package-lock.json)                                     | Reproducible npm dependency resolution.                                                                                                                           |
+| [.gitignore](../.gitignore)                                                   | Excludes credentials, local state, exports, generated output, and dependencies.                                                                                   |
+| [.dev.vars.example](../.dev.vars.example)                                     | Placeholder names for local Worker configuration; contains no working secret.                                                                                     |
+| [tests/helpers.mjs](../tests/helpers.mjs)                                     | In-memory SQLite/D1-style test adapter, migration setup, fake file bucket, and API-call helper.                                                                   |
+| [tests/business-isolation.test.mjs](../tests/business-isolation.test.mjs)     | Workspace isolation, membership/invitations, notifications, attachments, banking, and assistant tests.                                                            |
+| [tests/domain.test.js](../tests/domain.test.js)                               | Money, validation, date/aging, filtering, and search tests.                                                                                                       |
+| [tests/independent-auth.test.mjs](../tests/independent-auth.test.mjs)         | Supabase token verification, rejection of old identity headers, safe public configuration, and imported ownership adoption.                                       |
+| [tests/database-files.test.mjs](../tests/database-files.test.mjs)             | Binary file integrity across chunks, missing-object behavior, and complete chunk deletion.                                                                        |
+| [docs/MIGRATION.md](MIGRATION.md)                                             | Historical migration details and cutover considerations.                                                                                                          |
+| [README.md](../README.md)                                                     | Short setup, development, and deployment instructions.                                                                                                            |
+| [AutoPay-source.zip](../AutoPay-source.zip)                                   | Earlier implementation archive, including legacy hosting/Java reference material. It is not the deployed runtime.                                                 |
 
 Generated directories such as `node_modules/`, `dist/`, `.wrangler/`, and `.worker-build/` are not source files and should remain outside Git.
 
@@ -142,15 +142,15 @@ Generated directories such as `node_modules/`, `dist/`, `.wrangler/`, and `.work
 
 ### Public account routes
 
-| Route | Purpose |
-| --- | --- |
-| `/` | Opens the selected workspace for an authenticated member; otherwise presents login/onboarding. |
-| `/login` | Email/password login. |
-| `/signup` | Account registration; authenticated users can create another business here. |
-| `/signup?invite=...` | Account/login and joining flow for a specific email-bound invitation. |
-| `/auth/callback` | Supabase PKCE confirmation/session return route handled by the authentication shell and SDK. |
-| `/forgot-password` | Requests a password recovery email. |
-| `/reset-password` | Lets the user select a new password after opening a valid recovery link. |
+| Route                | Purpose                                                                                        |
+| -------------------- | ---------------------------------------------------------------------------------------------- |
+| `/`                  | Opens the selected workspace for an authenticated member; otherwise presents login/onboarding. |
+| `/login`             | Email/password login.                                                                          |
+| `/signup`            | Account registration; authenticated users can create another business here.                    |
+| `/signup?invite=...` | Account/login and joining flow for a specific email-bound invitation.                          |
+| `/auth/callback`     | Supabase PKCE confirmation/session return route handled by the authentication shell and SDK.   |
+| `/forgot-password`   | Requests a password recovery email.                                                            |
+| `/reset-password`    | Lets the user select a new password after opening a valid recovery link.                       |
 
 Cloudflare serves the SPA document for frontend paths. The pathname determines which authentication view to display. Workspace sections are React state within the app, rather than separate server-rendered pages.
 
@@ -207,17 +207,17 @@ Supabase authentication mail and Resend invoice alerts are distinct configuratio
 
 A business is the shared data boundary. Each `membership` links one account to one business with a role. One account can belong to multiple businesses.
 
-| Operation | Business member | Business owner |
-| --- | --- | --- |
-| View shared invoices and clients | Yes | Yes |
-| Create/edit invoices and clients | Yes | Yes |
-| Manage invoice notes, attachments, Trash, exports, and testing reports | Yes | Yes |
-| Edit own display name | Yes | Yes |
-| View business profile and team list | Yes | Yes |
-| Edit business profile/owner display name | No | Yes |
-| Create teammate invitation links | No | Yes |
-| Reveal/edit/remove full bank details | No | Yes |
-| Change notification recipient/preferences and retry delivery | No | Yes |
+| Operation                                                              | Business member | Business owner |
+| ---------------------------------------------------------------------- | --------------- | -------------- |
+| View shared invoices and clients                                       | Yes             | Yes            |
+| Create/edit invoices and clients                                       | Yes             | Yes            |
+| Manage invoice notes, attachments, Trash, exports, and testing reports | Yes             | Yes            |
+| Edit own display name                                                  | Yes             | Yes            |
+| View business profile and team list                                    | Yes             | Yes            |
+| Edit business profile/owner display name                               | No              | Yes            |
+| Create teammate invitation links                                       | No              | Yes            |
+| Reveal/edit/remove full bank details                                   | No              | Yes            |
+| Change notification recipient/preferences and retry delivery           | No              | Yes            |
 
 `owner_name` is an editable business display field. Editing it does not transfer the `owner_id` or grant a role. There is no implemented owner-transfer or member-removal endpoint.
 
@@ -271,15 +271,15 @@ A minimal creation payload is:
 
 Totals are computed by converting each unit price to integer cents before multiplying and adding. This avoids common decimal addition errors. The stored/displayed total is USD.
 
-| Rule | Current limit |
-| --- | --- |
-| Line items | 1–50 per invoice |
-| Quantity | Whole number from 1 through 10,000 |
-| Unit price | $0.01–$1,000,000; at most two decimal places |
-| Invoice total | At most $10,000,000 |
-| Item description | At most 250 characters; nonempty |
-| Invoice/client notes | At most 2,000 characters |
-| Dates | Valid `YYYY-MM-DD` calendar dates |
+| Rule                 | Current limit                                     |
+| -------------------- | ------------------------------------------------- |
+| Line items           | 1–50 per invoice                                  |
+| Quantity             | Whole number from 1 through 10,000                |
+| Unit price           | $0.01–$1,000,000; at most two decimal places      |
+| Invoice total        | At most $10,000,000                               |
+| Item description     | At most 250 characters; nonempty                  |
+| Invoice/client notes | At most 2,000 characters                          |
+| Dates                | Valid `YYYY-MM-DD` calendar dates                 |
 | Phone, when supplied | International `+` format, validated by the server |
 
 The app does not currently calculate taxes, discounts, foreign-exchange conversions, partial-payment balances, or recurring billing schedules.
@@ -314,7 +314,6 @@ Deleting an invoice sets its deletion flag and moves it to Trash. Restoring clea
 The top-right **Log out** button ends the Supabase session and returns to the login page. Invoice checkboxes support individual selection, select-all for the visible filtered rows, and clearing selection. Bulk flag, clear-flag, export, and delete actions apply only to the checked invoices in the current filtered list. Deletion requires a centered confirmation and moves invoices to recoverable Trash. If an action partially fails, successful changes remain saved and failed invoices remain checked for retry.
 
 Every invoice row has a clickable colored circle: violet for special attention, red for overdue, amber for pending, emerald for paid, and gray for void. Attention flags are stored on the invoice JSON record, shared across the business, retained through edits and restore, and recorded in the invoice timeline. The **Needs attention** filter shows flagged records. Clicking a circle toggles the flag; the separate status badge continues to show the payment status.
-
 
 The workspace loads the selected business's records, then performs search/filter matching in the browser. There is no separate server-side full-text search service.
 
@@ -366,13 +365,13 @@ Each business can choose a notification email and enable/disable new-invoice ale
 
 When alerts are enabled, invoice creation batches the invoice, missing-client insert, and notification outbox record. It then attempts Resend delivery. The notification contains invoice information and a workspace link, without bank details.
 
-| Notification status | Meaning |
-| --- | --- |
-| `PENDING` | Recorded, but delivery has not completed. |
-| `PENDING_SETUP` | Required mail configuration is missing or the recipient is blocked by the test-sender restriction. |
-| `SENDING` | A delivery attempt has claimed the record. |
-| `SENT` | Resend accepted the request; this is not inbox-delivery confirmation. |
-| `FAILED` | Delivery was not confirmed; an owner can review and retry. |
+| Notification status | Meaning                                                                                            |
+| ------------------- | -------------------------------------------------------------------------------------------------- |
+| `PENDING`           | Recorded, but delivery has not completed.                                                          |
+| `PENDING_SETUP`     | Required mail configuration is missing or the recipient is blocked by the test-sender restriction. |
+| `SENDING`           | A delivery attempt has claimed the record.                                                         |
+| `SENT`              | Resend accepted the request; this is not inbox-delivery confirmation.                              |
+| `FAILED`            | Delivery was not confirmed; an owner can review and retry.                                         |
 
 The provider request has a timeout and a notification-specific idempotency key. A previously `SENT` alert is not resent by the normal retry route.
 
@@ -424,36 +423,36 @@ No assistant mode has tools to edit records, send reminders, call clients, colle
 
 There are 14 application tables after the current migrations. Wrangler also tracks applied migrations separately. Several operational tables use the column name `owner` for their **business ID**.
 
-| Table | Main fields | Purpose |
-| --- | --- | --- |
-| `accounts` | `id`, `email`, `name`, `created_at` | AutoPay profile keyed to an authenticated identity. Passwords are not stored here. |
-| `businesses` | `id`, `name`, `owner_id`, profile fields, notification email/enabled | Business identity, owner reference, contact information, and alert settings. |
-| `memberships` | `id`, `business`, `user_id`, `role` | Business membership; unique business/user pair. |
-| `invites` | `id`, `business`, `email`, `token_hash`, timestamps | Email-bound, expiring, single-use join invitations. |
-| `clients` | `id`, `owner`, `email`, `data`, bank fields/re-entry flag | Client JSON and separately protected banking information; unique business/email pair. |
-| `invoices` | `id`, `owner`, `number`, `data`, `deleted`, `version`, `created_at` | Invoice JSON with indexed ownership/number and optimistic concurrency state. |
-| `attachments` | `id`, `owner`, `invoice`, `name`, `size`, `key`, `created_at` | Attachment metadata and object lookup key. |
-| `notifications` | `id`, `owner`, `invoice`, recipient, payload, status, attempts/provider/error fields | Durable new-invoice email outbox and status history. |
-| `ai_usage` | `business`, `hour`, `requests` | Paid-provider usage counters. The site-wide daily counter uses a reserved key/date. |
-| `legacy_identity_links` | `email`, `old_user_id`, `claimed_by` | Explicit mapping used to adopt imported accounts after verified email login. |
-| `file_objects` | `key`, `size`, `chunks` | D1 file object metadata. |
-| `report_schedules` | `business`, recipient, enabled, frequency, local time/timezone/weekday, next UTC run, updated timestamp | One report schedule per business. |
-| `report_runs` | `id`, business, recipient, scheduled time, payload, status, attempts, lease/retry timestamps, error/provider ID | Durable scheduled and manually requested report outbox. |
-| `file_chunks` | `key`, `sequence`, `data` | Ordered binary file chunks; composite primary key. |
+| Table                   | Main fields                                                                                                     | Purpose                                                                               |
+| ----------------------- | --------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| `accounts`              | `id`, `email`, `name`, `created_at`                                                                             | AutoPay profile keyed to an authenticated identity. Passwords are not stored here.    |
+| `businesses`            | `id`, `name`, `owner_id`, profile fields, notification email/enabled                                            | Business identity, owner reference, contact information, and alert settings.          |
+| `memberships`           | `id`, `business`, `user_id`, `role`                                                                             | Business membership; unique business/user pair.                                       |
+| `invites`               | `id`, `business`, `email`, `token_hash`, timestamps                                                             | Email-bound, expiring, single-use join invitations.                                   |
+| `clients`               | `id`, `owner`, `email`, `data`, bank fields/re-entry flag                                                       | Client JSON and separately protected banking information; unique business/email pair. |
+| `invoices`              | `id`, `owner`, `number`, `data`, `deleted`, `version`, `created_at`                                             | Invoice JSON with indexed ownership/number and optimistic concurrency state.          |
+| `attachments`           | `id`, `owner`, `invoice`, `name`, `size`, `key`, `created_at`                                                   | Attachment metadata and object lookup key.                                            |
+| `notifications`         | `id`, `owner`, `invoice`, recipient, payload, status, attempts/provider/error fields                            | Durable new-invoice email outbox and status history.                                  |
+| `ai_usage`              | `business`, `hour`, `requests`                                                                                  | Paid-provider usage counters. The site-wide daily counter uses a reserved key/date.   |
+| `legacy_identity_links` | `email`, `old_user_id`, `claimed_by`                                                                            | Explicit mapping used to adopt imported accounts after verified email login.          |
+| `file_objects`          | `key`, `size`, `chunks`                                                                                         | D1 file object metadata.                                                              |
+| `report_schedules`      | `business`, recipient, enabled, frequency, local time/timezone/weekday, next UTC run, updated timestamp         | One report schedule per business.                                                     |
+| `report_runs`           | `id`, business, recipient, scheduled time, payload, status, attempts, lease/retry timestamps, error/provider ID | Durable scheduled and manually requested report outbox.                               |
+| `file_chunks`           | `key`, `sequence`, `data`                                                                                       | Ordered binary file chunks; composite primary key.                                    |
 
 Primary business relationships are accounts → memberships → businesses, businesses → clients/invoices, and invoices → attachment/notification records. The application enforces many of these relationships in its queries rather than relying on a complete set of SQL foreign keys.
 
 Invoice and client JSON keep the app's flexible field structures, while indexed scalar columns support ownership checks, uniqueness, sorting, deletion, and concurrency. Renaming fields inside those JSON documents requires coordinated application/data migration work.
 
-| Migration | What it adds |
-| --- | --- |
+| Migration                                                                   | What it adds                                                                                                     |
+| --------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
 | [0000_friendly_johnny_storm.sql](../drizzle/0000_friendly_johnny_storm.sql) | Core accounts, businesses, memberships, invitations, invoices, clients, attachments, notifications, and indexes. |
-| [0001_lethal_madame_masque.sql](../drizzle/0001_lethal_madame_masque.sql) | Business owner/contact fields and encrypted/masked client bank fields. |
-| [0002_lethal_fixer.sql](../drizzle/0002_lethal_fixer.sql) | Assistant usage counters and their unique index. |
-| [0003_independent_identity.sql](../drizzle/0003_independent_identity.sql) | Imported identity mapping. |
-| [0004_database_files.sql](../drizzle/0004_database_files.sql) | D1 object and binary-chunk tables. |
-| [0006_scheduled_reports.sql](../drizzle/0006_scheduled_reports.sql) | Business report schedules, durable delivery history, and due/pending indexes. |
-| [0005_bank_migration.sql](../drizzle/0005_bank_migration.sql) | Bank-record re-entry flag. |
+| [0001_lethal_madame_masque.sql](../drizzle/0001_lethal_madame_masque.sql)   | Business owner/contact fields and encrypted/masked client bank fields.                                           |
+| [0002_lethal_fixer.sql](../drizzle/0002_lethal_fixer.sql)                   | Assistant usage counters and their unique index.                                                                 |
+| [0003_independent_identity.sql](../drizzle/0003_independent_identity.sql)   | Imported identity mapping.                                                                                       |
+| [0004_database_files.sql](../drizzle/0004_database_files.sql)               | D1 object and binary-chunk tables.                                                                               |
+| [0006_scheduled_reports.sql](../drizzle/0006_scheduled_reports.sql)         | Business report schedules, durable delivery history, and due/pending indexes.                                    |
+| [0005_bank_migration.sql](../drizzle/0005_bank_migration.sql)               | Bank-record re-entry flag.                                                                                       |
 
 Apply migrations in order using Wrangler. Do not edit already-applied migrations to change an existing database; add a new migration and preserve the prior history. These are D1 migrations, not Supabase Postgres migrations.
 
@@ -481,77 +480,77 @@ General JSON request bodies are limited to 64 KiB. Most JSON responses use `Cach
 
 ### Public and account endpoints
 
-| Method | Path | Purpose |
-| --- | --- | --- |
-| GET | `/api/health` | Lightweight Worker response with configuration presence/chat mode. It is not a full database/provider health check. |
-| GET | `/api/public-config` | Safe Supabase URL and publishable key, or a not-configured state. |
-| GET | `/api/auth/me` | Verified identity, AutoPay profile, and business memberships. |
-| POST | `/api/auth/register` | Creates the AutoPay profile if missing, a business, and an owner membership. This does not create the Supabase password identity. |
-| POST | `/api/auth/join` | Joins a valid invitation using `{name, token}` and the matching verified email. |
-| POST | `/api/auth/profile` | Updates the signed-in account's display name. |
+| Method | Path                 | Purpose                                                                                                                           |
+| ------ | -------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| GET    | `/api/health`        | Lightweight Worker response with configuration presence/chat mode. It is not a full database/provider health check.               |
+| GET    | `/api/public-config` | Safe Supabase URL and publishable key, or a not-configured state.                                                                 |
+| GET    | `/api/auth/me`       | Verified identity, AutoPay profile, and business memberships.                                                                     |
+| POST   | `/api/auth/register` | Creates the AutoPay profile if missing, a business, and an owner membership. This does not create the Supabase password identity. |
+| POST   | `/api/auth/join`     | Joins a valid invitation using `{name, token}` and the matching verified email.                                                   |
+| POST   | `/api/auth/profile`  | Updates the signed-in account's display name.                                                                                     |
 
 ### Business, team, and alerts
 
-| Method | Path | Purpose |
-| --- | --- | --- |
-| GET | `/api/session` | Current workspace context and voice-readiness presentation; current hosted session reports live payments disabled. |
-| GET / POST | `/api/business-profile` | Read profile; owner-only update. |
-| GET | `/api/team` | Member list; owners also receive invitation metadata. |
-| POST | `/api/team/invite` | Owner-only invitation creation for an email. |
-| GET / POST | `/api/notification-settings` | Read settings; owner-only update. |
-| GET | `/api/notifications` | Recent business notification records. |
-| POST | `/api/notifications/:notificationId/retry` | Owner-only eligible delivery retry. |
+| Method     | Path                                       | Purpose                                                                                                            |
+| ---------- | ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------ |
+| GET        | `/api/session`                             | Current workspace context and voice-readiness presentation; current hosted session reports live payments disabled. |
+| GET / POST | `/api/business-profile`                    | Read profile; owner-only update.                                                                                   |
+| GET        | `/api/team`                                | Member list; owners also receive invitation metadata.                                                              |
+| POST       | `/api/team/invite`                         | Owner-only invitation creation for an email.                                                                       |
+| GET / POST | `/api/notification-settings`               | Read settings; owner-only update.                                                                                  |
+| GET        | `/api/notifications`                       | Recent business notification records.                                                                              |
+| POST       | `/api/notifications/:notificationId/retry` | Owner-only eligible delivery retry.                                                                                |
 
 ### Clients and banking
 
-| Method | Path | Purpose |
-| --- | --- | --- |
-| GET | `/api/clients` | Business directory with masked bank summary fields. |
-| POST | `/api/clients` | Creates a client. |
-| POST | `/api/clients/:clientId` | Updates ordinary client fields. |
-| GET | `/api/clients/:clientId/bank` | Owner-only protected bank read, configuration status, and re-entry state. |
-| POST | `/api/clients/:clientId/bank` | Owner-only encrypted save; `{remove: true}` removes the current bank details. |
+| Method | Path                          | Purpose                                                                       |
+| ------ | ----------------------------- | ----------------------------------------------------------------------------- |
+| GET    | `/api/clients`                | Business directory with masked bank summary fields.                           |
+| POST   | `/api/clients`                | Creates a client.                                                             |
+| POST   | `/api/clients/:clientId`      | Updates ordinary client fields.                                               |
+| GET    | `/api/clients/:clientId/bank` | Owner-only protected bank read, configuration status, and re-entry state.     |
+| POST   | `/api/clients/:clientId/bank` | Owner-only encrypted save; `{remove: true}` removes the current bank details. |
 
 ### Invoices and attachments
 
-| Method | Path | Purpose |
-| --- | --- | --- |
-| GET / POST | `/api/invoices` | List active records or create an invoice. |
-| GET | `/api/invoices/trash` | List soft-deleted records. |
-| GET | `/api/invoices/:invoiceId` | Retrieve an active invoice. |
-| POST | `/api/invoices/:invoiceId/edit` | Update invoice fields/status through the complete edit payload. |
-| POST | `/api/invoices/:invoiceId/notes` | Update notes. |
-| POST | `/api/invoices/:invoiceId/payment-details` | Set a paid invoice's method and applicable check reference. |
-| POST | `/api/invoices/:invoiceId/delete` | Move to Trash. |
-| POST | `/api/invoices/:invoiceId/restore` | Restore from Trash. |
-| POST | `/api/invoices/:invoiceId/void` | Void an open invoice record. |
-| POST | `/api/invoices/:invoiceId/simulate` | Record a simulated success/failure. |
-| POST | `/api/invoices/:invoiceId/call` | Explicitly rejects live calls in this Worker. |
-| GET / POST | `/api/invoices/:invoiceId/attachments` | List attachment metadata or upload a file. |
-| GET | `/api/invoices/:invoiceId/attachments/:fileId/download` | Authorized attachment download. |
-| POST | `/api/invoices/:invoiceId/attachments/:fileId/remove` | Remove attachment metadata/content. |
-| GET / POST | `/api/chat` | Read assistant mode/readiness, or ask a bounded report question. |
+| Method     | Path                                                    | Purpose                                                          |
+| ---------- | ------------------------------------------------------- | ---------------------------------------------------------------- |
+| GET / POST | `/api/invoices`                                         | List active records or create an invoice.                        |
+| GET        | `/api/invoices/trash`                                   | List soft-deleted records.                                       |
+| GET        | `/api/invoices/:invoiceId`                              | Retrieve an active invoice.                                      |
+| POST       | `/api/invoices/:invoiceId/edit`                         | Update invoice fields/status through the complete edit payload.  |
+| POST       | `/api/invoices/:invoiceId/notes`                        | Update notes.                                                    |
+| POST       | `/api/invoices/:invoiceId/payment-details`              | Set a paid invoice's method and applicable check reference.      |
+| POST       | `/api/invoices/:invoiceId/delete`                       | Move to Trash.                                                   |
+| POST       | `/api/invoices/:invoiceId/restore`                      | Restore from Trash.                                              |
+| POST       | `/api/invoices/:invoiceId/void`                         | Void an open invoice record.                                     |
+| POST       | `/api/invoices/:invoiceId/simulate`                     | Record a simulated success/failure.                              |
+| POST       | `/api/invoices/:invoiceId/call`                         | Explicitly rejects live calls in this Worker.                    |
+| GET / POST | `/api/invoices/:invoiceId/attachments`                  | List attachment metadata or upload a file.                       |
+| GET        | `/api/invoices/:invoiceId/attachments/:fileId/download` | Authorized attachment download.                                  |
+| POST       | `/api/invoices/:invoiceId/attachments/:fileId/remove`   | Remove attachment metadata/content.                              |
+| GET / POST | `/api/chat`                                             | Read assistant mode/readiness, or ask a bounded report question. |
 
 Common responses include `400` for invalid input, `401` for no accepted identity, `403` for a forbidden business/owner action or origin, `404` for an unavailable scoped record, `409` for a conflict, `413` for size limits, `429` for usage limits, and `503` for setup/provider availability. Some unexpected failures return a generic `500`. Error responses intentionally avoid returning credentials or raw provider details.
 
 ## Configuration and secrets
 
-| Name/binding | Purpose | Treatment |
-| --- | --- | --- |
-| `DB` | Cloudflare D1 binding for application records and testing files. | Required server binding. |
-| `ASSETS` | Built React/static assets. | Required server asset binding. |
-| `BUCKET` | Optional R2 storage adapter. | Absent from the current testing configuration. |
-| `SUPABASE_URL` | HTTPS project origin used for Auth. | Public project configuration. |
-| `SUPABASE_PUBLISHABLE_KEY` | Public client key. Modern publishable keys are preferred; legacy anon compatibility is validated. | Public by design. Secret/service-role keys are rejected by the configuration helper. |
-| `AUTOPAY_CHAT_MODE` | Testing versus explicitly opted-in provider mode. | Deployed value is `testing`; checked by the deployment guard. |
-| `BANK_DATA_KEY` | Base64-encoded 32-byte bank encryption key. | Server secret; back up securely. |
-| `RESEND_API_KEY` | Invoice-alert sending credential. | Optional server secret. |
-| `MAIL_FROM_EMAIL` | Mail sender identity accepted by Resend. | Runtime configuration; currently stored as a secret. |
-| `RESEND_TEST_RECIPIENT` | Restricts test alerts to the configured inbox. | Keep while using the test sender. |
-| `INITIAL_OWNER_EMAIL` | Determines which verified new business owner receives default alert settings. | Optional runtime configuration. |
-| `INITIAL_NOTIFICATION_EMAIL` | Default alert inbox only when the owner-email match passes. | Optional runtime configuration. |
-| `OPENAI_API_KEY` | Optional paid-provider credential. | Not needed in testing mode; server-only if ever configured. |
-| `OPENAI_MODEL` | Optional provider model override. | No effect on the rule-based testing reports. |
+| Name/binding                 | Purpose                                                                                           | Treatment                                                                            |
+| ---------------------------- | ------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| `DB`                         | Cloudflare D1 binding for application records and testing files.                                  | Required server binding.                                                             |
+| `ASSETS`                     | Built React/static assets.                                                                        | Required server asset binding.                                                       |
+| `BUCKET`                     | Optional R2 storage adapter.                                                                      | Absent from the current testing configuration.                                       |
+| `SUPABASE_URL`               | HTTPS project origin used for Auth.                                                               | Public project configuration.                                                        |
+| `SUPABASE_PUBLISHABLE_KEY`   | Public client key. Modern publishable keys are preferred; legacy anon compatibility is validated. | Public by design. Secret/service-role keys are rejected by the configuration helper. |
+| `AUTOPAY_CHAT_MODE`          | Testing versus explicitly opted-in provider mode.                                                 | Deployed value is `testing`; checked by the deployment guard.                        |
+| `BANK_DATA_KEY`              | Base64-encoded 32-byte bank encryption key.                                                       | Server secret; back up securely.                                                     |
+| `RESEND_API_KEY`             | Invoice-alert sending credential.                                                                 | Optional server secret.                                                              |
+| `MAIL_FROM_EMAIL`            | Mail sender identity accepted by Resend.                                                          | Runtime configuration; currently stored as a secret.                                 |
+| `RESEND_TEST_RECIPIENT`      | Restricts test alerts to the configured inbox.                                                    | Keep while using the test sender.                                                    |
+| `INITIAL_OWNER_EMAIL`        | Determines which verified new business owner receives default alert settings.                     | Optional runtime configuration.                                                      |
+| `INITIAL_NOTIFICATION_EMAIL` | Default alert inbox only when the owner-email match passes.                                       | Optional runtime configuration.                                                      |
+| `OPENAI_API_KEY`             | Optional paid-provider credential.                                                                | Not needed in testing mode; server-only if ever configured.                          |
+| `OPENAI_MODEL`               | Optional provider model override.                                                                 | No effect on the rule-based testing reports.                                         |
 
 Cloudflare account IDs, database IDs, project URLs, and publishable keys identify resources; private API keys, session tokens, encryption keys, password values, and exported records must never be committed. `.dev.vars` is ignored for local secrets. `.dev.vars.example` documents placeholder names only.
 
@@ -579,17 +578,17 @@ Local D1 state is separate from production and is stored under ignored Wrangler 
 
 ## Build and deployment
 
-| Command | What it does |
-| --- | --- |
-| `npm run dev` | Starts the React/Worker development environment on loopback. |
-| `npm run build` | Builds the Worker and browser assets. |
-| `npm run preview` | Starts Vite's preview command; it is not a production deployment. |
-| `npm test` | Runs the Node test files. |
-| `npm run setup:check` | Checks configured deployment identifiers/auth configuration and testing mode. |
-| `npm run worker:check` | Builds and asks Wrangler for a dry-run deployment bundle. |
-| `npm run db:migrate:local` | Applies pending migrations to local D1. |
-| `npm run db:migrate:remote` | Applies pending migrations to the configured remote D1. |
-| `npm run deploy` | Builds, runs deployment preflight, and deploys through Wrangler. |
+| Command                     | What it does                                                                  |
+| --------------------------- | ----------------------------------------------------------------------------- |
+| `npm run dev`               | Starts the React/Worker development environment on loopback.                  |
+| `npm run build`             | Builds the Worker and browser assets.                                         |
+| `npm run preview`           | Starts Vite's preview command; it is not a production deployment.             |
+| `npm test`                  | Runs the Node test files.                                                     |
+| `npm run setup:check`       | Checks configured deployment identifiers/auth configuration and testing mode. |
+| `npm run worker:check`      | Builds and asks Wrangler for a dry-run deployment bundle.                     |
+| `npm run db:migrate:local`  | Applies pending migrations to local D1.                                       |
+| `npm run db:migrate:remote` | Applies pending migrations to the configured remote D1.                       |
+| `npm run deploy`            | Builds, runs deployment preflight, and deploys through Wrangler.              |
 
 The Cloudflare Vite plugin emits the Worker under `dist/autopay/` and the browser assets under `dist/client/`. It also emits the deployment configuration Wrangler uses. Both outputs are generated and ignored by Git.
 
@@ -615,14 +614,14 @@ Back up the D1 database and encryption key before migrations or key/storage chan
 
 The current source has **39 automated tests** across six test files:
 
-| Test file | Main coverage |
-| --- | --- |
-| `tests/reports.test.mjs` | Schedule validation/timezone/DST, owner permissions, report isolation/privacy, idempotency, retries/expiry, leases, cancellation, and attachment counts. |
-| `tests/excel.test.mjs` | OOXML structure, numeric amounts, leading-zero references, formula-safe text, attention flags, and empty exports. |
-| `tests/domain.test.js` | Cent-based totals, invalid line items, aging, paid-date anchoring, inclusive filters, and scoped loaded-record search. |
+| Test file                           | Main coverage                                                                                                                                                                                                                                                                               |
+| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `tests/reports.test.mjs`            | Schedule validation/timezone/DST, owner permissions, report isolation/privacy, idempotency, retries/expiry, leases, cancellation, and attachment counts.                                                                                                                                    |
+| `tests/excel.test.mjs`              | OOXML structure, numeric amounts, leading-zero references, formula-safe text, attention flags, and empty exports.                                                                                                                                                                           |
+| `tests/domain.test.js`              | Cent-based totals, invalid line items, aging, paid-date anchoring, inclusive filters, and scoped loaded-record search.                                                                                                                                                                      |
 | `tests/business-isolation.test.mjs` | Shared business membership, email-bound invitations, cross-business rejection, origin/marker checks, attachment scoping, email outbox/provider idempotency, bank encryption/owner access, assistant setup/limits/errors, testing reports, and zero outbound provider calls in testing mode. |
-| `tests/independent-auth.test.mjs` | Old-host header rejection, provider token checking, confirmed-email requirement, anonymous/invalid/provider-failure handling, safe public configuration, and explicit imported identity adoption. |
-| `tests/database-files.test.mjs` | Multi-chunk binary preservation, missing-object isolation by key, and deletion of every chunk. |
+| `tests/independent-auth.test.mjs`   | Old-host header rejection, provider token checking, confirmed-email requirement, anonymous/invalid/provider-failure handling, safe public configuration, and explicit imported identity adoption.                                                                                           |
+| `tests/database-files.test.mjs`     | Multi-chunk binary preservation, missing-object isolation by key, and deletion of every chunk.                                                                                                                                                                                              |
 
 `tests/helpers.mjs` applies the SQL migrations to an in-memory Node SQLite database and provides a D1-shaped prepared-statement/batch adapter. Other tests use a fake bucket. Provider-facing requests are mocked in the automated suite.
 
@@ -663,25 +662,25 @@ Important practical boundaries are:
 
 ## Troubleshooting
 
-| Symptom | Where to look |
-| --- | --- |
-| Login page says setup is incomplete | Validate `SUPABASE_URL` and the publishable key; inspect `/api/public-config`. Do not substitute a service-role key. |
-| Signup/reset email never arrives | Check Supabase team-address restrictions, SMTP configuration, sender verification, provider logs, and the exact redirect allowlist. |
-| API returns `401` | Check the Supabase session, confirmation state, bearer token, and whether the configured project matches the user's token. |
-| API returns `403` | Check business membership, owner-only requirements, and same-origin request headers. |
-| Previous businesses do not appear | Verify the new account uses the old verified email, then review `legacy_identity_links` and migration conflicts. Do not manually accept an unverified email as ownership. |
-| Editing returns `409` | Another update or a uniqueness conflict occurred. Refresh the record and retry with current data. |
-| New invoice returns `429` | Review the business's hourly alert-record limit if notifications are enabled. Paid-mode assistant limits apply to chat requests separately. |
-| Bank editor asks for re-entry | This imported ciphertext needs a current-key replacement from the owner. |
-| Bank save reports setup/key failure | Check the server's `BANK_DATA_KEY`, its base64 encoding, and 32-byte decoded length without printing it. |
-| Attachment is unavailable | Check invoice deletion state, attachment ownership/metadata, file chunk rows, and whether a `BUCKET` binding was enabled before migrating old objects. |
-| Alert says Pending setup | Check sender secrets and the test-recipient restriction. |
-| Alert says Sent but no email is visible | Inspect the provider delivery/bounce information; application `SENT` means provider acceptance. |
-| Assistant cannot answer a question | Use a supported report or exact client/invoice identifier; review its workspace size limit. |
-| Assistant unexpectedly asks for an API key | Check server mode. The intended testing deployment must use `AUTOPAY_CHAT_MODE=testing`. |
-| Browser data seems stale | Refresh the selected workspace; there is no active realtime subscription in testing mode. |
-| A source change is missing online | Confirm a successful Wrangler deployment; a GitHub push is not an automatic deployment. |
-| Local migration worked but production fails | Apply the same pending migrations to remote D1 and verify the deployment uses the intended database ID. |
+| Symptom                                     | Where to look                                                                                                                                                             |
+| ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Login page says setup is incomplete         | Validate `SUPABASE_URL` and the publishable key; inspect `/api/public-config`. Do not substitute a service-role key.                                                      |
+| Signup/reset email never arrives            | Check Supabase team-address restrictions, SMTP configuration, sender verification, provider logs, and the exact redirect allowlist.                                       |
+| API returns `401`                           | Check the Supabase session, confirmation state, bearer token, and whether the configured project matches the user's token.                                                |
+| API returns `403`                           | Check business membership, owner-only requirements, and same-origin request headers.                                                                                      |
+| Previous businesses do not appear           | Verify the new account uses the old verified email, then review `legacy_identity_links` and migration conflicts. Do not manually accept an unverified email as ownership. |
+| Editing returns `409`                       | Another update or a uniqueness conflict occurred. Refresh the record and retry with current data.                                                                         |
+| New invoice returns `429`                   | Review the business's hourly alert-record limit if notifications are enabled. Paid-mode assistant limits apply to chat requests separately.                               |
+| Bank editor asks for re-entry               | This imported ciphertext needs a current-key replacement from the owner.                                                                                                  |
+| Bank save reports setup/key failure         | Check the server's `BANK_DATA_KEY`, its base64 encoding, and 32-byte decoded length without printing it.                                                                  |
+| Attachment is unavailable                   | Check invoice deletion state, attachment ownership/metadata, file chunk rows, and whether a `BUCKET` binding was enabled before migrating old objects.                    |
+| Alert says Pending setup                    | Check sender secrets and the test-recipient restriction.                                                                                                                  |
+| Alert says Sent but no email is visible     | Inspect the provider delivery/bounce information; application `SENT` means provider acceptance.                                                                           |
+| Assistant cannot answer a question          | Use a supported report or exact client/invoice identifier; review its workspace size limit.                                                                               |
+| Assistant unexpectedly asks for an API key  | Check server mode. The intended testing deployment must use `AUTOPAY_CHAT_MODE=testing`.                                                                                  |
+| Browser data seems stale                    | Refresh the selected workspace; there is no active realtime subscription in testing mode.                                                                                 |
+| A source change is missing online           | Confirm a successful Wrangler deployment; a GitHub push is not an automatic deployment.                                                                                   |
+| Local migration worked but production fails | Apply the same pending migrations to remote D1 and verify the deployment uses the intended database ID.                                                                   |
 
 Use Cloudflare Worker observability and provider dashboards for runtime diagnosis. Keep tokens, passwords, bank details, and private export files out of copied logs or public issues.
 
@@ -689,17 +688,17 @@ Use Cloudflare Worker observability and provider dashboards for runtime diagnosi
 
 Use this map when planning a change:
 
-| Change | Main files and follow-up checks |
-| --- | --- |
-| Add an invoice field | Update form/table/detail UI, API payload, server validation/edit logic, JSON data compatibility, exports/search/report snapshot where relevant, and domain tests. |
-| Change a money/date rule | Update `domain.js` and the service/report logic that relies on it; add a meaningful boundary-case test. |
-| Change authentication | Review `auth-shell.jsx`, the token client, Worker verification/adoption, Supabase settings, and auth/isolation tests. |
-| Add a role or restrict an action | Enforce it in the service first, then reflect it in UI controls and role tests. |
-| Add a database column/table | Add a new D1 migration, apply it locally/remotely as appropriate, and update the test setup, queries, and documentation. |
-| Move file storage to R2 | Copy existing objects by key, verify authorized downloads, then enable `BUCKET`; retain a rollback backup. |
-| Expand the assistant | Update the report parser/snapshot/UI and test its data scope; keep testing mode independent of provider calls. |
-| Enable production mail | Configure verified senders separately for Supabase Auth and invoice alerts; test actual delivery and failure reporting. |
-| Add real collections | Build and validate a separate provider integration, authenticated callbacks, consent flow, idempotency, and payment reconciliation before exposing a live call/charge action. |
+| Change                           | Main files and follow-up checks                                                                                                                                               |
+| -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Add an invoice field             | Update form/table/detail UI, API payload, server validation/edit logic, JSON data compatibility, exports/search/report snapshot where relevant, and domain tests.             |
+| Change a money/date rule         | Update `domain.js` and the service/report logic that relies on it; add a meaningful boundary-case test.                                                                       |
+| Change authentication            | Review `auth-shell.jsx`, the token client, Worker verification/adoption, Supabase settings, and auth/isolation tests.                                                         |
+| Add a role or restrict an action | Enforce it in the service first, then reflect it in UI controls and role tests.                                                                                               |
+| Add a database column/table      | Add a new D1 migration, apply it locally/remotely as appropriate, and update the test setup, queries, and documentation.                                                      |
+| Move file storage to R2          | Copy existing objects by key, verify authorized downloads, then enable `BUCKET`; retain a rollback backup.                                                                    |
+| Expand the assistant             | Update the report parser/snapshot/UI and test its data scope; keep testing mode independent of provider calls.                                                                |
+| Enable production mail           | Configure verified senders separately for Supabase Auth and invoice alerts; test actual delivery and failure reporting.                                                       |
+| Add real collections             | Build and validate a separate provider integration, authenticated callbacks, consent flow, idempotency, and payment reconciliation before exposing a live call/charge action. |
 
 Read source behavior before changing it, keep credentials out of Git, run checks appropriate to the change, and update this guide when the architecture or operating limits change.
 
@@ -759,12 +758,12 @@ Reports use the existing server-only `RESEND_API_KEY`, `MAIL_FROM_EMAIL`, and op
 
 API routes, all requiring the normal authenticated business scope:
 
-| Route | Behavior |
-| --- | --- |
-| `GET /api/report-settings` | Read the business schedule, next delivery, sender readiness, and owner capability. |
-| `POST /api/report-settings` | Owner-only validation/upsert, next-run computation, and queued scheduled report cancellation. |
-| `POST /api/report-settings/send` | Owner-only immediate report using saved recipient/timezone, with hourly rate limit. |
-| `GET /api/reports` | Read the most recent 20 report delivery records for the current business. |
-| `POST /api/reports/:id/retry` | Owner-only retry of an eligible report belonging to the current business. |
+| Route                            | Behavior                                                                                      |
+| -------------------------------- | --------------------------------------------------------------------------------------------- |
+| `GET /api/report-settings`       | Read the business schedule, next delivery, sender readiness, and owner capability.            |
+| `POST /api/report-settings`      | Owner-only validation/upsert, next-run computation, and queued scheduled report cancellation. |
+| `POST /api/report-settings/send` | Owner-only immediate report using saved recipient/timezone, with hourly rate limit.           |
+| `GET /api/reports`               | Read the most recent 20 report delivery records for the current business.                     |
+| `POST /api/reports/:id/retry`    | Owner-only retry of an eligible report belonging to the current business.                     |
 
 Apply migration `0006_scheduled_reports.sql` before deploying the new Worker. The handler is invoked by Cloudflare scheduled events; there is no public HTTP trigger. New Cloudflare cron settings may take up to 15 minutes to propagate. See the [Cloudflare Cron Trigger documentation](https://developers.cloudflare.com/workers/configuration/cron-triggers/).

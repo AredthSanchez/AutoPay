@@ -1,29 +1,538 @@
-import React,{Suspense,lazy,useEffect,useRef,useState} from 'react';
-import {createClient} from '@supabase/supabase-js';
-import {Users,FileText,ShieldCheck,LoaderCircle,CheckCircle2} from 'lucide-react';
-const App=lazy(()=>import('./workspace'));
+import React, { Suspense, lazy, useEffect, useRef, useState } from "react";
+import { createClient } from "@supabase/supabase-js";
+import { Users, FileText, ShieldCheck, LoaderCircle, CheckCircle2 } from "lucide-react";
+const App = lazy(() => import("./workspace"));
 
-import {request,setAccessTokenProvider,setBusiness} from './workspace/api';
-import './workspace/style.css';
-import './auth.css';
-export default function AuthShell(){
- const path=location.pathname,urlInvite=new URLSearchParams(location.search).get('invite')||'';if(urlInvite)sessionStorage.setItem('autopay-invite',urlInvite);const invite=urlInvite||sessionStorage.getItem('autopay-invite')||'';
- const [client,setClient]=useState(null),[data,setData]=useState(null),[loading,setLoading]=useState(true),[busy,setBusy]=useState(false),[error,setError]=useState(''),[notice,setNotice]=useState(''),[setup,setSetup]=useState(false),[selected,setSelected]=useState('');
- const [email,setEmail]=useState(''),[password,setPassword]=useState(''),[confirm,setConfirm]=useState(''),[name,setName]=useState(''),[businessName,setBusinessName]=useState(''),[ownerName,setOwnerName]=useState(''),[recovery,setRecovery]=useState(path==='/reset-password');
- const mounted=useRef(false),sequence=useRef(0);
- async function loadProfile(){const seq=++sequence.current;try{const d=await request('/auth/me');if(!mounted.current||seq!==sequence.current)return;setData(d);setName(d.account?.name||d.identity?.displayName||'');setOwnerName(d.account?.name||d.identity?.displayName||'');const saved=localStorage.getItem('autopay-business');const id=d.businesses.find(b=>b.id===saved)?.id||d.businesses[0]?.id||'';setSelected(id);setBusiness(id);setError('')}catch(e){if(mounted.current&&seq===sequence.current){setData(null);if(e.status!==401)setError(e.message)}}finally{if(mounted.current&&seq===sequence.current)setLoading(false)}}
- useEffect(()=>{mounted.current=true;let subscription;fetch('/api/public-config',{cache:'no-store'}).then(r=>{if(!r.ok)throw Error('Login setup is temporarily unavailable.');return r.json()}).then(async config=>{if(!mounted.current)return;if(!config.configured){setSetup(true);setLoading(false);return}const auth=createClient(config.supabaseUrl,config.supabasePublishableKey,{auth:{flowType:'pkce',detectSessionInUrl:true,persistSession:true,autoRefreshToken:true}});setClient(auth);setAccessTokenProvider(async()=>{const {data,error}=await auth.auth.getSession();if(error)throw error;return data.session?.access_token||null});subscription=auth.auth.onAuthStateChange((event)=>{if(event==='PASSWORD_RECOVERY')setRecovery(true);if(event==='SIGNED_OUT'){sequence.current++;setData(null);setSelected('');setBusiness('');setLoading(false)}else if(['SIGNED_IN','TOKEN_REFRESHED','INITIAL_SESSION','USER_UPDATED','PASSWORD_RECOVERY'].includes(event))queueMicrotask(()=>{if(mounted.current)loadProfile()})}).data.subscription;const result=await auth.auth.getSession();if(result.error)throw result.error;if(result.data.session)await loadProfile();else{setLoading(false);const params=new URLSearchParams(location.search);const authError=params.get('error_description')||new URLSearchParams(location.hash.slice(1)).get('error_description');if(authError)setError(authError.slice(0,250))}}).catch(e=>{if(mounted.current){setError(e.message);setLoading(false)}});return()=>{mounted.current=false;sequence.current++;subscription?.unsubscribe();setAccessTokenProvider(async()=>null)}},[]);
- const signed=!!data?.identity,business=data?.businesses.find(b=>b.id===selected),signup=path==='/signup',forgot=path==='/forgot-password';
- const callback='/auth/callback';
- async function run(action){setBusy(true);setError('');setNotice('');try{await action()}catch(e){setError(e.message||'Please try again.')}finally{setBusy(false)}}
- async function authenticate(e){e.preventDefault();await run(async()=>{if(!client)throw Error('Login is still loading.');if(signup){if(password!==confirm)throw Error('Passwords do not match.');const {data:result,error}=await client.auth.signUp({email:email.trim(),password,options:{data:{full_name:name.trim()},emailRedirectTo:location.origin+callback}});if(error)throw error;setPassword('');setConfirm('');if(result.session)await loadProfile();else setNotice('Check your email to confirm your account, then return here to create or join your business.')}else{const {error}=await client.auth.signInWithPassword({email:email.trim(),password});if(error)throw error;setPassword('');await loadProfile();if(!invite)location.assign('/')}})}
- async function createWorkspace(e){e.preventDefault();await run(async()=>{const result=await request(invite?'/auth/join':'/auth/register',invite?{name,token:invite}:{name,businessName,ownerName:ownerName||name});localStorage.setItem('autopay-business',result.businessId);sessionStorage.removeItem('autopay-invite');location.assign('/')})}
- async function signOut(){await run(async()=>{if(client){const {error}=await client.auth.signOut();if(error)throw error}setBusiness('');localStorage.removeItem('autopay-business');location.assign('/login')})}
- const alternate=invite?'?invite='+encodeURIComponent(invite):'';
- if(loading)return <div className="auth-loading"><LoaderCircle size={24}/><span>Opening your workspace…</span></div>;
- if(signed&&business&&!invite&&!forgot&&!recovery&&path!=='/signup')return <Suspense fallback={<div className="auth-loading">Opening your workspace…</div>}><App key={selected} account={data.account} business={business} businesses={data.businesses} onSignOut={signOut} switchBusiness={id=>{setBusiness(id);localStorage.setItem('autopay-business',id);setSelected(id)}}/></Suspense>;
- return <main className="auth-layout"><section className="auth-story"><a className="logo" href="/"><img className="brand-symbol" src="/autopay-logo.svg" alt="" width="38" height="38"/>autopay.</a><span className="auth-eyebrow">BUILT FOR YOUR BUSINESS</span><h1>Your team.<br/>Your invoices.<br/>One clear picture.</h1><p>One shared workspace for clients, invoices, payments, and files - with an individual login for every teammate.</p><div className="auth-benefits"><span><Users size={18}/>Individual accounts. A shared business.</span><span><FileText size={18}/>Your invoices and files, together.</span><span><ShieldCheck size={18}/>Secure email and password login.</span></div><small>Less chasing. More clarity.</small></section><section className="auth-form-area"><div className="auth-form"><span className="eyebrow">{recovery?'ACCOUNT RECOVERY':forgot?'RESET YOUR PASSWORD':invite?'TEAM INVITATION':signed?'YOUR BUSINESS':signup?'CREATE YOUR ACCOUNT':'WELCOME BACK'}</span><h2>{recovery?'Choose a new password.':forgot?'Get back to work.':signed?(invite?'Join your team.':business?'Your workspace is ready.':'Create your business.'):signup?'Start your next chapter.':'A little less chasing.'}</h2>
- {error&&<p className="error" role="alert">{error}</p>}{notice&&<p className="auth-success" role="status">{notice}</p>}
- {setup?<div className="auth-setup"><h3>Email login is being connected</h3><p>The site owner needs to finish the Supabase project configuration. Please check back shortly.</p></div>:recovery?<form onSubmit={e=>{e.preventDefault();run(async()=>{if(password!==confirm)throw Error('Passwords do not match.');const {data}=await client.auth.getSession();if(!data.session)throw Error('Open the password reset link from your email first.');const {error}=await client.auth.updateUser({password});if(error)throw error;setPassword('');setConfirm('');setRecovery(false);setNotice('Your password has been updated.');location.assign('/')})}}><p className="auth-description">Open the recovery link from your email to choose a new password.</p><label>New password<input type="password" minLength={12} maxLength={128} required value={password} onChange={e=>setPassword(e.target.value)} autoComplete="new-password"/></label><label>Confirm new password<input type="password" minLength={12} maxLength={128} required value={confirm} onChange={e=>setConfirm(e.target.value)} autoComplete="new-password"/></label><button className="primary auth-continue" disabled={busy}>{busy?'Saving…':'Save new password'}</button></form>:forgot?<form onSubmit={e=>{e.preventDefault();run(async()=>{const {error}=await client.auth.resetPasswordForEmail(email.trim(),{redirectTo:location.origin+'/reset-password'});if(error)throw error;setNotice('If this email has an account, you’ll receive a password reset link.')})}}><p className="auth-description">Enter your account email and we’ll send a recovery link.</p><label>Email address<input type="email" required maxLength={200} value={email} onChange={e=>setEmail(e.target.value)} autoComplete="email"/></label><button className="primary auth-continue" disabled={busy}>{busy?'Sending…':'Send reset link'}</button><a className="auth-switch" href="/login">Back to login</a></form>:signed?(invite||!business?<form onSubmit={createWorkspace}><div className="auth-identity"><CheckCircle2 size={16}/>{data.identity.email}</div><label>Your name<input required maxLength={120} value={name} onChange={e=>setName(e.target.value)} autoComplete="name"/></label>{!invite&&<><label>Business owner name<input required maxLength={120} value={ownerName} onChange={e=>setOwnerName(e.target.value)} autoComplete="name"/></label><label>Business name<input required maxLength={150} value={businessName} onChange={e=>setBusinessName(e.target.value)} autoComplete="organization"/></label></>}<button className="primary auth-continue" disabled={busy}>{busy?'Saving…':invite?'Join business':'Create business workspace'}</button></form>:<a className="primary auth-continue" href="/">Open your workspace</a>):<form onSubmit={authenticate}><p className="auth-description">{signup?'Create your account with your email and a password.':invite?'Log in with the email address your team invited.':'Use your business email and password to continue.'}</p>{signup&&<label>Your name<input required maxLength={120} value={name} onChange={e=>setName(e.target.value)} autoComplete="name"/></label>}<label>Email address<input type="email" required maxLength={200} value={email} onChange={e=>setEmail(e.target.value)} autoComplete="email"/></label><label>Password<input type="password" required minLength={signup?12:1} maxLength={128} value={password} onChange={e=>setPassword(e.target.value)} autoComplete={signup?'new-password':'current-password'}/></label>{signup&&<><label>Confirm password<input type="password" required minLength={12} maxLength={128} value={confirm} onChange={e=>setConfirm(e.target.value)} autoComplete="new-password"/></label><p className="auth-fine">Use at least 12 characters. We’ll email you to confirm your address.</p></>}<button className="primary auth-continue" disabled={busy}>{busy?'Please wait…':signup?'Create account':'Log in'}</button>{!signup&&<a className="auth-switch" href="/forgot-password">Forgot your password?</a>}</form>}
- {signed&&<button className="auth-switch auth-text-button" disabled={busy} onClick={signOut}>Use a different account / Log out</button>}{!recovery&&!forgot&&<><div className="auth-divider"/><p className="auth-alternate">{signup?'Already have an account?':'New to AutoPay?'} <a href={(signup?'/login':'/signup')+alternate}>{signup?'Log in':'Create an account'}</a></p></>}{signed&&!invite&&!business&&<p className="auth-fine">Joining a team? Use the business owner’s invitation link.</p>}</div><small className="auth-footer">AutoPay · Invoices, without the busywork.</small></section></main>
+import { request, setAccessTokenProvider, setBusiness } from "./workspace/api";
+import "./workspace/style.css";
+import "./auth.css";
+export default function AuthShell() {
+  const path = location.pathname,
+    urlInvite = new URLSearchParams(location.search).get("invite") || "";
+  if (urlInvite) sessionStorage.setItem("autopay-invite", urlInvite);
+  const invite = urlInvite || sessionStorage.getItem("autopay-invite") || "";
+  const [client, setClient] = useState(null),
+    [data, setData] = useState(null),
+    [loading, setLoading] = useState(true),
+    [busy, setBusy] = useState(false),
+    [error, setError] = useState(""),
+    [notice, setNotice] = useState(""),
+    [setup, setSetup] = useState(false),
+    [selected, setSelected] = useState("");
+  const [email, setEmail] = useState(""),
+    [password, setPassword] = useState(""),
+    [confirm, setConfirm] = useState(""),
+    [name, setName] = useState(""),
+    [businessName, setBusinessName] = useState(""),
+    [ownerName, setOwnerName] = useState(""),
+    [recovery, setRecovery] = useState(path === "/reset-password");
+  const mounted = useRef(false),
+    sequence = useRef(0);
+  async function loadProfile() {
+    const seq = ++sequence.current;
+    try {
+      const d = await request("/auth/me");
+      if (!mounted.current || seq !== sequence.current) return;
+      setData(d);
+      setName(d.account?.name || d.identity?.displayName || "");
+      setOwnerName(d.account?.name || d.identity?.displayName || "");
+      const saved = localStorage.getItem("autopay-business");
+      const id = d.businesses.find((b) => b.id === saved)?.id || d.businesses[0]?.id || "";
+      setSelected(id);
+      setBusiness(id);
+      setError("");
+    } catch (e) {
+      if (mounted.current && seq === sequence.current) {
+        setData(null);
+        if (e.status !== 401) setError(e.message);
+      }
+    } finally {
+      if (mounted.current && seq === sequence.current) setLoading(false);
+    }
+  }
+  useEffect(() => {
+    mounted.current = true;
+    let subscription;
+    fetch("/api/public-config", { cache: "no-store" })
+      .then((r) => {
+        if (!r.ok) throw Error("Login setup is temporarily unavailable.");
+        return r.json();
+      })
+      .then(async (config) => {
+        if (!mounted.current) return;
+        if (!config.configured) {
+          setSetup(true);
+          setLoading(false);
+          return;
+        }
+        const auth = createClient(config.supabaseUrl, config.supabasePublishableKey, {
+          auth: {
+            flowType: "pkce",
+            detectSessionInUrl: true,
+            persistSession: true,
+            autoRefreshToken: true,
+          },
+        });
+        setClient(auth);
+        setAccessTokenProvider(async () => {
+          const { data, error } = await auth.auth.getSession();
+          if (error) throw error;
+          return data.session?.access_token || null;
+        });
+        subscription = auth.auth.onAuthStateChange((event) => {
+          if (event === "PASSWORD_RECOVERY") setRecovery(true);
+          if (event === "SIGNED_OUT") {
+            sequence.current++;
+            setData(null);
+            setSelected("");
+            setBusiness("");
+            setLoading(false);
+          } else if (
+            [
+              "SIGNED_IN",
+              "TOKEN_REFRESHED",
+              "INITIAL_SESSION",
+              "USER_UPDATED",
+              "PASSWORD_RECOVERY",
+            ].includes(event)
+          )
+            queueMicrotask(() => {
+              if (mounted.current) loadProfile();
+            });
+        }).data.subscription;
+        const result = await auth.auth.getSession();
+        if (result.error) throw result.error;
+        if (result.data.session) await loadProfile();
+        else {
+          setLoading(false);
+          const params = new URLSearchParams(location.search);
+          const authError =
+            params.get("error_description") ||
+            new URLSearchParams(location.hash.slice(1)).get("error_description");
+          if (authError) setError(authError.slice(0, 250));
+        }
+      })
+      .catch((e) => {
+        if (mounted.current) {
+          setError(e.message);
+          setLoading(false);
+        }
+      });
+    return () => {
+      mounted.current = false;
+      sequence.current++;
+      subscription?.unsubscribe();
+      setAccessTokenProvider(async () => null);
+    };
+  }, []);
+  const signed = !!data?.identity,
+    business = data?.businesses.find((b) => b.id === selected),
+    signup = path === "/signup",
+    forgot = path === "/forgot-password";
+  const callback = "/auth/callback";
+  async function run(action) {
+    setBusy(true);
+    setError("");
+    setNotice("");
+    try {
+      await action();
+    } catch (e) {
+      setError(e.message || "Please try again.");
+    } finally {
+      setBusy(false);
+    }
+  }
+  async function authenticate(e) {
+    e.preventDefault();
+    await run(async () => {
+      if (!client) throw Error("Login is still loading.");
+      if (signup) {
+        if (password !== confirm) throw Error("Passwords do not match.");
+        const { data: result, error } = await client.auth.signUp({
+          email: email.trim(),
+          password,
+          options: {
+            data: { full_name: name.trim() },
+            emailRedirectTo: location.origin + callback,
+          },
+        });
+        if (error) throw error;
+        setPassword("");
+        setConfirm("");
+        if (result.session) await loadProfile();
+        else
+          setNotice(
+            "Check your email to confirm your account, then return here to create or join your business.",
+          );
+      } else {
+        const { error } = await client.auth.signInWithPassword({ email: email.trim(), password });
+        if (error) throw error;
+        setPassword("");
+        await loadProfile();
+        if (!invite) location.assign("/");
+      }
+    });
+  }
+  async function createWorkspace(e) {
+    e.preventDefault();
+    await run(async () => {
+      const result = await request(
+        invite ? "/auth/join" : "/auth/register",
+        invite ? { name, token: invite } : { name, businessName, ownerName: ownerName || name },
+      );
+      localStorage.setItem("autopay-business", result.businessId);
+      sessionStorage.removeItem("autopay-invite");
+      location.assign("/");
+    });
+  }
+  async function signOut() {
+    await run(async () => {
+      if (client) {
+        const { error } = await client.auth.signOut();
+        if (error) throw error;
+      }
+      setBusiness("");
+      localStorage.removeItem("autopay-business");
+      location.assign("/login");
+    });
+  }
+  const alternate = invite ? "?invite=" + encodeURIComponent(invite) : "";
+  if (loading)
+    return (
+      <div className="auth-loading">
+        <LoaderCircle size={24} />
+        <span>Opening your workspace…</span>
+      </div>
+    );
+  if (signed && business && !invite && !forgot && !recovery && path !== "/signup")
+    return (
+      <Suspense fallback={<div className="auth-loading">Opening your workspace…</div>}>
+        <App
+          key={selected}
+          account={data.account}
+          business={business}
+          businesses={data.businesses}
+          onSignOut={signOut}
+          switchBusiness={(id) => {
+            setBusiness(id);
+            localStorage.setItem("autopay-business", id);
+            setSelected(id);
+          }}
+        />
+      </Suspense>
+    );
+  return (
+    <main className="auth-layout">
+      <section className="auth-story">
+        <a className="logo" href="/">
+          <img className="brand-symbol" src="/autopay-logo.svg" alt="" width="38" height="38" />
+          autopay.
+        </a>
+        <span className="auth-eyebrow">BUILT FOR YOUR BUSINESS</span>
+        <h1>
+          Your team.
+          <br />
+          Your invoices.
+          <br />
+          One clear picture.
+        </h1>
+        <p>
+          One shared workspace for clients, invoices, payments, and files - with an individual login
+          for every teammate.
+        </p>
+        <div className="auth-benefits">
+          <span>
+            <Users size={18} />
+            Individual accounts. A shared business.
+          </span>
+          <span>
+            <FileText size={18} />
+            Your invoices and files, together.
+          </span>
+          <span>
+            <ShieldCheck size={18} />
+            Secure email and password login.
+          </span>
+        </div>
+        <small>Less chasing. More clarity.</small>
+      </section>
+      <section className="auth-form-area">
+        <div className="auth-form">
+          <span className="eyebrow">
+            {recovery
+              ? "ACCOUNT RECOVERY"
+              : forgot
+                ? "RESET YOUR PASSWORD"
+                : invite
+                  ? "TEAM INVITATION"
+                  : signed
+                    ? "YOUR BUSINESS"
+                    : signup
+                      ? "CREATE YOUR ACCOUNT"
+                      : "WELCOME BACK"}
+          </span>
+          <h2>
+            {recovery
+              ? "Choose a new password."
+              : forgot
+                ? "Get back to work."
+                : signed
+                  ? invite
+                    ? "Join your team."
+                    : business
+                      ? "Your workspace is ready."
+                      : "Create your business."
+                  : signup
+                    ? "Start your next chapter."
+                    : "A little less chasing."}
+          </h2>
+          {error && (
+            <p className="error" role="alert">
+              {error}
+            </p>
+          )}
+          {notice && (
+            <p className="auth-success" role="status">
+              {notice}
+            </p>
+          )}
+          {setup ? (
+            <div className="auth-setup">
+              <h3>Email login is being connected</h3>
+              <p>
+                The site owner needs to finish the Supabase project configuration. Please check back
+                shortly.
+              </p>
+            </div>
+          ) : recovery ? (
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                run(async () => {
+                  if (password !== confirm) throw Error("Passwords do not match.");
+                  const { data } = await client.auth.getSession();
+                  if (!data.session)
+                    throw Error("Open the password reset link from your email first.");
+                  const { error } = await client.auth.updateUser({ password });
+                  if (error) throw error;
+                  setPassword("");
+                  setConfirm("");
+                  setRecovery(false);
+                  setNotice("Your password has been updated.");
+                  location.assign("/");
+                });
+              }}
+            >
+              <p className="auth-description">
+                Open the recovery link from your email to choose a new password.
+              </p>
+              <label>
+                New password
+                <input
+                  type="password"
+                  minLength={12}
+                  maxLength={128}
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  autoComplete="new-password"
+                />
+              </label>
+              <label>
+                Confirm new password
+                <input
+                  type="password"
+                  minLength={12}
+                  maxLength={128}
+                  required
+                  value={confirm}
+                  onChange={(e) => setConfirm(e.target.value)}
+                  autoComplete="new-password"
+                />
+              </label>
+              <button className="primary auth-continue" disabled={busy}>
+                {busy ? "Saving…" : "Save new password"}
+              </button>
+            </form>
+          ) : forgot ? (
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                run(async () => {
+                  const { error } = await client.auth.resetPasswordForEmail(email.trim(), {
+                    redirectTo: location.origin + "/reset-password",
+                  });
+                  if (error) throw error;
+                  setNotice("If this email has an account, you’ll receive a password reset link.");
+                });
+              }}
+            >
+              <p className="auth-description">
+                Enter your account email and we’ll send a recovery link.
+              </p>
+              <label>
+                Email address
+                <input
+                  type="email"
+                  required
+                  maxLength={200}
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  autoComplete="email"
+                />
+              </label>
+              <button className="primary auth-continue" disabled={busy}>
+                {busy ? "Sending…" : "Send reset link"}
+              </button>
+              <a className="auth-switch" href="/login">
+                Back to login
+              </a>
+            </form>
+          ) : signed ? (
+            invite || !business ? (
+              <form onSubmit={createWorkspace}>
+                <div className="auth-identity">
+                  <CheckCircle2 size={16} />
+                  {data.identity.email}
+                </div>
+                <label>
+                  Your name
+                  <input
+                    required
+                    maxLength={120}
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    autoComplete="name"
+                  />
+                </label>
+                {!invite && (
+                  <>
+                    <label>
+                      Business owner name
+                      <input
+                        required
+                        maxLength={120}
+                        value={ownerName}
+                        onChange={(e) => setOwnerName(e.target.value)}
+                        autoComplete="name"
+                      />
+                    </label>
+                    <label>
+                      Business name
+                      <input
+                        required
+                        maxLength={150}
+                        value={businessName}
+                        onChange={(e) => setBusinessName(e.target.value)}
+                        autoComplete="organization"
+                      />
+                    </label>
+                  </>
+                )}
+                <button className="primary auth-continue" disabled={busy}>
+                  {busy ? "Saving…" : invite ? "Join business" : "Create business workspace"}
+                </button>
+              </form>
+            ) : (
+              <a className="primary auth-continue" href="/">
+                Open your workspace
+              </a>
+            )
+          ) : (
+            <form onSubmit={authenticate}>
+              <p className="auth-description">
+                {signup
+                  ? "Create your account with your email and a password."
+                  : invite
+                    ? "Log in with the email address your team invited."
+                    : "Use your business email and password to continue."}
+              </p>
+              {signup && (
+                <label>
+                  Your name
+                  <input
+                    required
+                    maxLength={120}
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    autoComplete="name"
+                  />
+                </label>
+              )}
+              <label>
+                Email address
+                <input
+                  type="email"
+                  required
+                  maxLength={200}
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  autoComplete="email"
+                />
+              </label>
+              <label>
+                Password
+                <input
+                  type="password"
+                  required
+                  minLength={signup ? 12 : 1}
+                  maxLength={128}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  autoComplete={signup ? "new-password" : "current-password"}
+                />
+              </label>
+              {signup && (
+                <>
+                  <label>
+                    Confirm password
+                    <input
+                      type="password"
+                      required
+                      minLength={12}
+                      maxLength={128}
+                      value={confirm}
+                      onChange={(e) => setConfirm(e.target.value)}
+                      autoComplete="new-password"
+                    />
+                  </label>
+                  <p className="auth-fine">
+                    Use at least 12 characters. We’ll email you to confirm your address.
+                  </p>
+                </>
+              )}
+              <button className="primary auth-continue" disabled={busy}>
+                {busy ? "Please wait…" : signup ? "Create account" : "Log in"}
+              </button>
+              {!signup && (
+                <a className="auth-switch" href="/forgot-password">
+                  Forgot your password?
+                </a>
+              )}
+            </form>
+          )}
+          {signed && (
+            <button className="auth-switch auth-text-button" disabled={busy} onClick={signOut}>
+              Use a different account / Log out
+            </button>
+          )}
+          {!recovery && !forgot && (
+            <>
+              <div className="auth-divider" />
+              <p className="auth-alternate">
+                {signup ? "Already have an account?" : "New to AutoPay?"}{" "}
+                <a href={(signup ? "/login" : "/signup") + alternate}>
+                  {signup ? "Log in" : "Create an account"}
+                </a>
+              </p>
+            </>
+          )}
+          {signed && !invite && !business && (
+            <p className="auth-fine">Joining a team? Use the business owner’s invitation link.</p>
+          )}
+        </div>
+        <small className="auth-footer">AutoPay · Invoices, without the busywork.</small>
+      </section>
+    </main>
+  );
 }
