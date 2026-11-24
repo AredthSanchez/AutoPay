@@ -2,11 +2,13 @@
 
 Use alongside the [code walkthrough](STUDY_GUIDE.md), [tool inventory](TOOLS_AND_SERVICES.md), and [file guide](FILE_GUIDE.md). Answers below describe the root application, not the archived Java project. They are prompts for rehearsal, not claims that every feature has been independently verified in production.
 
-## Explaining the diagram out loud
+## Explaining the diagrams out loud
 
-> The top box is the screen I use. When I save an invoice, it sends the form to the middle box, which is the server code. That code checks my login, my business access, and the invoice fields. It then saves the invoice in the bottom box, the database. The result travels back to the screen. React builds the screen, Cloudflare Workers runs the checks, and Cloudflare D1 stores the records.
+> The browser section contains the account and invoice screens. A form uses the shared request helper to send the current login token and business ID to Cloudflare. The Worker checks the token with Supabase, then the business service checks membership, validates the input, and reads or saves records in D1. File storage, reports, and chat are separate paths because they have different jobs.
 
-If asked where passwords are handled, explain that Supabase is the separate login service. If asked where email is handled, show the separate email diagram. These services support the main flow; they are not additional screens the user must operate.
+Use the architecture diagram to answer **which part is responsible?** Use the invoice sequence diagram to answer **what happens first, next, and on failure?** For the sequence, follow one call at a time from the Save button to HTTP 201, then explain why a failed email does not undo the saved invoice.
+
+Be ready to identify the files behind the boxes: `api.js` sends requests, `worker/auth.mjs` verifies identity, `service.mjs` checks business access and saves records, and D1 holds the data. The optional paid chat path is dashed because it is disabled in the checked-in testing configuration.
 
 ## Project introduction
 
@@ -18,16 +20,16 @@ If asked where passwords are handled, explain that Supabase is the separate logi
 
 ## Eight-minute presentation outline
 
-| Time      | Topic                 | What to show or explain                                                                                                                               |
-| --------- | --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 0:00–0:45 | Problem               | Businesses need one place for invoice follow-up, records, and team access. State the current scope.                                                   |
-| 0:45–1:30 | Main workflow         | Open a test business, find a client, create an invoice, and show its details.                                                                         |
-| 1:30–2:30 | Architecture          | React browser → Worker API → permission checks → D1. Supabase handles identity.                                                                       |
-| 2:30–3:30 | One request           | Trace invoice creation from `api.create()` through validation and the database insert.                                                                |
-| 3:30–4:30 | Shared access         | Explain accounts versus businesses, membership checks, owner-only banking/settings.                                                                   |
-| 4:30–5:30 | Technical details     | Integer-cent arithmetic, invoice version checks, attachment chunks, or email retries. Choose two you can explain deeply.                              |
-| 5:30–6:30 | Reports and chat      | Show settings/history and a free testing-mode question. Explain what is optional or simulated.                                                        |
-| 6:30–7:15 | Verification          | Show test names and one meaningful assertion, then build/test results.                                                                                |
+| Time      | Topic                 | What to show or explain                                                                                                                                         |
+| --------- | --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 0:00–0:45 | Problem               | Businesses need one place for invoice follow-up, records, and team access. State the current scope.                                                             |
+| 0:45–1:30 | Main workflow         | Open a test business, find a client, create an invoice, and show its details.                                                                                   |
+| 1:30–2:30 | Architecture          | React browser → Worker API → permission checks → D1. Supabase handles identity.                                                                                 |
+| 2:30–3:30 | One request           | Trace invoice creation from `api.create()` through validation and the database insert.                                                                          |
+| 3:30–4:30 | Shared access         | Explain accounts versus businesses, membership checks, owner-only banking/settings.                                                                             |
+| 4:30–5:30 | Technical details     | Integer-cent arithmetic, invoice version checks, attachment chunks, or email retries. Choose two you can explain deeply.                                        |
+| 5:30–6:30 | Reports and chat      | Show settings/history and a free testing-mode question. Explain what is optional or simulated.                                                                  |
+| 6:30–7:15 | Verification          | Show test names and one meaningful assertion, then build/test results.                                                                                          |
 | 7:15–8:00 | Limits and next steps | Live calling is unavailable; discuss browser tests, data normalization, and stronger stale-form detection. Explain the requirements and development tools used. |
 
 ## Demo preparation

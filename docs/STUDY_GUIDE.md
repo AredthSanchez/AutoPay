@@ -9,23 +9,107 @@ This guide describes the root application in this repository. The older Java app
 Start with an action you can see: creating an invoice. You fill in a form and click Save. AutoPay checks the information, stores it, and shows the result. Three parts work together to do that.
 
 ```mermaid
-flowchart TD
-    Screen["1. The screen you use<br/>Forms, buttons, and invoice lists"]
-    Server["2. The code that handles your request<br/>Checks access and invoice details"]
-    Data["3. The place records are saved<br/>Businesses, clients, and invoices"]
-    Screen -->|"Send the invoice form"| Server
-    Server -->|"Save the checked invoice"| Data
-    Data -->|"Return the saved record"| Server
-    Server -->|"Return the result to display"| Screen
+flowchart TB
+    subgraph Browser["Browser: screens and user actions"]
+        Account["Account screens<br/>auth-shell.jsx<br/>Login and business selection"]
+        Workspace["Invoice and client screens<br/>workspace/index.jsx<br/>Forms, filters, and record details"]
+        API["Request helper<br/>workspace/api.js<br/>Adds login token and business ID"]
+        Account -->|"Open selected business"| Workspace
+        Workspace -->|"Read or save records"| API
+    end
+    subgraph Server["Cloudflare Workers: code behind the screens"]
+        Entry["Request entry<br/>worker/index.mjs<br/>Receives /api requests"]
+        Identity["Login verification<br/>worker/auth.mjs<br/>Checks token and confirmed email"]
+        Service["Business rules<br/>lib/autopay/service.mjs<br/>Membership, owner permissions,<br/>field validation, invoice versions"]
+        Entry --> Identity
+        Identity -->|"Verified user"| Service
+    end
+    Auth["Supabase Auth<br/>Accounts, passwords, sessions"]
+    DB[("Cloudflare D1<br/>Businesses, memberships, invoices,<br/>clients, files, and email history")]
+    FileStore["Attachment adapter<br/>worker/database-files.mjs<br/>Stores and reads file pieces"]
+    Reports["Report processor<br/>lib/autopay/reports.mjs<br/>Schedule, summary, send, retry"]
+    Cron["Cloudflare schedule<br/>Runs every 15 minutes"]
+    Mail["Resend<br/>Email delivery service"]
+    LocalChat["Testing chat<br/>testing-chat.mjs<br/>Answers with local rules"]
+    PaidChat["Optional OpenAI request<br/>chat.mjs<br/>Restricted record summary"]
+
+    Account -->|"Signup, login, recovery"| Auth
+    API -->|"HTTP request"| Entry
+    Identity -->|"Ask whether token is valid"| Auth
+    Service -->|"Read or update business records"| DB
+    Service -->|"File operations"| FileStore
+    FileStore -->|"Store or stream chunks"| DB
+    Service -->|"Invoice email when enabled"| Mail
+    Service -->|"Default chat mode"| LocalChat
+    Service -.->|"Only when paid mode is enabled"| PaidChat
+    Cron --> Reports
+    Reports -->|"Read schedules; save send attempts"| DB
+    Reports -->|"Submit report email"| Mail
 ```
 
-**Read the boxes from top to bottom.** Each box is a job, not a separate screen you need to open. The arrows describe messages moving between those parts. The arrows back up explain how the result gets back to you. They do not mean that the database displays the website itself.
+### Reading this diagram
 
-| Diagram box         | What it does                                                                              | Tool used in AutoPay                                                                                                             |
-| ------------------- | ----------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| 1. The screen       | Displays the form, remembers what you type, and sends it when you click Save.             | **React**, a library for building interactive screens. It runs in your browser.                                                  |
-| 2. Request handling | Checks that you are logged in, belong to the business, and entered valid invoice details. | **Cloudflare Workers**, a service that runs AutoPay's server code. A server is the part that handles requests behind the screen. |
-| 3. Saved records    | Keeps the invoice so it still exists after the page is closed.                            | **Cloudflare D1**, a database service. A database is an organized collection of saved records.                                   |
+The two large boxes separate code running in the browser from code running on Cloudflare. Smaller boxes name the files responsible for each job. Follow the path **invoice screen → request helper → request entry → login verification → business rules → database** for an ordinary invoice operation.
+
+Arrows show requests or handoffs. Replies usually travel back along the same path and are left out here to keep the architecture readable. A dashed arrow marks the optional paid chat path. The account screen talks directly to Supabase for login; invoice requests go through AutoPay's server, which verifies the login again before checking business access.
+
+| Component                       | Why it is separate                                                                                                                                        |
+| ------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Account screens                 | Manage login and business selection before opening invoice records.                                                                                       |
+| Request helper                  | Adds the current token and business ID consistently instead of repeating that code in every form.                                                         |
+| Worker entry and identity check | Receive requests and establish who is logged in. They do not replace business permissions.                                                                |
+| Business service                | Checks membership and fields, applies invoice rules, and decides which records may be read or changed.                                                    |
+| D1 database                     | Keeps records after the browser closes. Its membership rows connect users to businesses.                                                                  |
+| File adapter                    | Handles attachment bytes separately from the invoice's file listing. Uses D1 chunks by default; R2 can replace storage after configuration and migration. |
+| Report processor                | Runs without an open browser and tracks delivery attempts for retries.                                                                                    |
+| Chat paths                      | Default testing mode uses local rules. Optional paid mode calls OpenAI with a restricted summary. Neither path can change invoices.                       |
+
+The diagram represents the current source and configuration, not proof that every optional external service is enabled. The full tool descriptions are in [Tools and services](TOOLS_AND_SERVICES.md).
+
+### Exact order when an invoice is created
+
+This second diagram follows time from top to bottom. Each vertical column is one participant. A solid arrow is a call; a dashed arrow is a reply. It shows the normal successful path, with rejection points explained below.
+
+```mermaid
+sequenceDiagram
+    actor User
+    participant Form as Invoice screen: App + InvoiceForm
+    participant API as api.js: request helper
+    participant Worker as Worker: index.mjs + auth.mjs
+    participant Auth as Supabase Auth
+    participant Service as AutoPayService: service.mjs
+    participant DB as D1 database
+
+    User->>Form: Enter client, due date, notes, and items; click Save
+    Form->>API: api.create(draft)
+    API->>Worker: POST /api/invoices with JSON, token, and business ID
+    Worker->>Auth: Verify bearer token through the user endpoint
+    Auth-->>Worker: Confirmed user identity
+    Worker->>Service: serve(request, database, user, environment)
+    Service->>Service: Check write-request marker and origin
+    Service->>DB: Find this user's membership in the selected business
+    DB-->>Service: Business and role, or no matching membership
+    Service->>Service: Validate fields and recalculate total in cents
+    Service->>Service: Generate invoice ID, number, and activity entry
+    Service->>DB: Batch invoice and related client inserts
+    Note over Service,DB: If alerts are enabled, include a saved notification in the batch
+    DB-->>Service: Database save completes
+    opt Invoice alerts enabled and sender configured
+        Service->>Service: Attempt Resend delivery; record result separately
+    end
+    Service-->>Worker: Saved invoice JSON with HTTP 201
+    Worker-->>API: Response with browser security headers
+    API-->>Form: Saved invoice result
+    Form->>API: Reload workspace records
+    API-->>Form: Updated lists after authenticated server reads
+    Form-->>User: Show saved invoice or report a reload error
+```
+
+**What is sent:** The token is temporary login evidence. The business ID selects the workspace, but does not authorize access by itself. JSON contains the form values as structured text. `POST /api/invoices` is the server address and request type used to create an invoice. `201` means the server created a record.
+
+**Where it can stop:** An invalid login is rejected before business operations. A missing membership is rejected before accessing that business's invoices. Invalid fields are rejected before inserts. A database failure returns an error instead of claiming the invoice was saved. Email delivery happens separately: an email failure does not mean the saved invoice disappeared.
+
+**Where to point in the code:** `InvoiceForm` gathers fields; `api.create()` calls `request()`; `handle()` in the Worker verifies identity; `scope()` checks membership; `draft()` and `total()` validate the invoice; the invoice-creation branch batches database changes; `deliverNotice()` handles the optional email.
 
 ### A concrete example
 
