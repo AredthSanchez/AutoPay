@@ -1,3 +1,7 @@
+/**
+ * Business settings screens for team membership, invitation links, invoice alerts, and the business profile.
+ * Owner-only controls are also enforced by the API; hiding a control is not an authorization boundary.
+ */
 "use client";
 import React, { useEffect, useState } from "react";
 import ReportSettings from "./report-settings";
@@ -12,6 +16,7 @@ export default function BusinessSettings({ business, account }) {
     [busy, setBusy] = useState(false),
     [message, setMessage] = useState(""),
     [error, setError] = useState("");
+  // Fetch team and notification settings for the currently selected business.
   async function load() {
     try {
       const [t, s, n] = await Promise.all([
@@ -257,6 +262,7 @@ export default function BusinessSettings({ business, account }) {
     </section>
   );
 }
+// Keep business profile edits separate from account display-name edits.
 function BusinessProfile({ business, account }) {
   const [profile, setProfile] = useState(null),
     [myName, setMyName] = useState(account.name),

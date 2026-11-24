@@ -1,3 +1,7 @@
+/**
+ * Owns email/password authentication, recovery, and business selection before mounting the workspace.
+ * Browser session state improves navigation; server-side identity and membership checks remain authoritative.
+ */
 import React, { Suspense, lazy, useEffect, useRef, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
 import { Users, FileText, ShieldCheck, LoaderCircle, CheckCircle2 } from "lucide-react";
@@ -28,6 +32,7 @@ export default function AuthShell() {
     [recovery, setRecovery] = useState(path === "/reset-password");
   const mounted = useRef(false),
     sequence = useRef(0);
+  // Ignore profile responses from older requests or a component that has already unmounted.
   async function loadProfile() {
     const seq = ++sequence.current;
     try {
@@ -65,6 +70,7 @@ export default function AuthShell() {
           setLoading(false);
           return;
         }
+        // Only the publishable project key reaches the browser. The Worker verifies the session token separately.
         const auth = createClient(config.supabaseUrl, config.supabasePublishableKey, {
           auth: {
             flowType: "pkce",
@@ -79,6 +85,7 @@ export default function AuthShell() {
           if (error) throw error;
           return data.session?.access_token || null;
         });
+        // Defer profile loading outside the auth callback; invalidate pending responses when signing out.
         subscription = auth.auth.onAuthStateChange((event) => {
           if (event === "PASSWORD_RECOVERY") setRecovery(true);
           if (event === "SIGNED_OUT") {
@@ -173,6 +180,7 @@ export default function AuthShell() {
       }
     });
   }
+  // A confirmed identity either creates its own business or redeems an email-bound invitation.
   async function createWorkspace(e) {
     e.preventDefault();
     await run(async () => {
@@ -185,6 +193,7 @@ export default function AuthShell() {
       location.assign("/");
     });
   }
+  // Clear the saved business choice after ending the Supabase session; server checks still protect records.
   async function signOut() {
     await run(async () => {
       if (client) {

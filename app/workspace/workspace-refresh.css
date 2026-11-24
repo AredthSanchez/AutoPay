@@ -1,3 +1,4 @@
+/* Later workspace visual overrides. Loaded after style.css, so selector specificity and order matter. */
 /* Workspace hierarchy: quiet navigation, readable data, and contextual actions. */
 .shell {
   --ink: #18263c;

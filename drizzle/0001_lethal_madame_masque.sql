@@ -1,3 +1,5 @@
+-- Adds business profile fields and encrypted bank ciphertext plus a display-only last-four suffix.
+-- Apply migrations in numeric order; add a new migration for future schema changes.
 ALTER TABLE `businesses`
 ADD `owner_name` text DEFAULT '' NOT NULL;
 

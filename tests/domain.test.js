@@ -1,3 +1,6 @@
+/**
+ * Unit coverage for invoice arithmetic, aging, inclusive filters, search, sorting, and duplication defaults.
+ */
 import test from "node:test";
 import assert from "node:assert/strict";
 import {

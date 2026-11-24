@@ -1,3 +1,5 @@
+-- Adds per-business report schedules and a durable delivery outbox with retries and expiring leases.
+-- Apply migrations in numeric order; add a new migration for future schema changes.
 CREATE TABLE report_schedules (
   business TEXT PRIMARY KEY NOT NULL,
   recipient TEXT NOT NULL,

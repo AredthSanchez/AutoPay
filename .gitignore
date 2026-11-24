@@ -1,3 +1,4 @@
+# Dependencies/build output are reproducible; local credentials, databases, uploads, and exports stay private.
 node_modules/
 dist/
 .wrangler/

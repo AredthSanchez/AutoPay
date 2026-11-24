@@ -1,3 +1,6 @@
+/**
+ * Inspects generated ZIP/XML content to verify numeric amounts, text references, and formula-safe exports.
+ */
 import test from "node:test";
 import assert from "node:assert/strict";
 import { invoiceWorkbook } from "../app/workspace/excel.js";

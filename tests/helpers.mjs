@@ -1,3 +1,7 @@
+/**
+ * In-memory integration harness: applies all D1 migrations to SQLite and adapts it to the D1 query API.
+ * Requests use explicit test identities; the fake bucket avoids real object-storage and network side effects.
+ */
 import { DatabaseSync } from "node:sqlite";
 import { readFileSync } from "node:fs";
 import { serve } from "../lib/autopay/service.mjs";

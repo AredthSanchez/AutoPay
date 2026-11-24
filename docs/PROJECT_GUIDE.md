@@ -1,5 +1,7 @@
 # AutoPay: Complete Project Guide
 
+See the [File-by-file Guide](FILE_GUIDE.md) for the complete tracked-file index and inline-comment conventions.
+
 This guide explains the current application, its source files, data model, request flows, configuration, deployment, tests, and practical limits. It describes the implementation present in this repository on **November 20, 2026**. Configuration examples contain names and placeholders, never private credentials or exported business records.
 
 **Application:** https://autopay.aredthsanchez.workers.dev/  

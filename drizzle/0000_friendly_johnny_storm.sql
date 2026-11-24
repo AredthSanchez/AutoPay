@@ -1,3 +1,5 @@
+-- Initial business schema. Legacy owner columns on invoices, clients, files, and notifications store BUSINESS IDs.
+-- Apply migrations in numeric order; add a new migration for future schema changes.
 CREATE TABLE `accounts` (
   `id` text PRIMARY KEY NOT NULL,
   `email` text NOT NULL,

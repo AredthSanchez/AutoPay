@@ -1,3 +1,7 @@
+/**
+ * Read-only deployment preflight for checked-in Cloudflare IDs, public auth configuration, and testing mode.
+ * This does not verify remote migrations, secret availability, or actual mail delivery.
+ */
 import { readFileSync } from "node:fs";
 import { authConfig } from "../worker/auth.mjs";
 const config = JSON.parse(readFileSync(new URL("../wrangler.jsonc", import.meta.url), "utf8"));

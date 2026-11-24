@@ -1,3 +1,7 @@
+/**
+ * Read-only chat panel scoped to the selected business. Sends conversation text to the server,
+ * which chooses testing or OpenAI mode and builds the authorized record snapshot.
+ */
 "use client";
 import React, { useEffect, useRef, useState } from "react";
 import { Sparkles, Send, RotateCcw, LoaderCircle } from "lucide-react";
@@ -22,6 +26,7 @@ export default function Assistant({ business }) {
   useEffect(() => {
     if (messages.length || busy) bottom.current?.scrollIntoView({ block: "nearest" });
   }, [messages, busy]);
+  // Send conversation context, not raw bank records or attachments; the server assembles allowed data.
   async function send(value = prompt) {
     const content = value.trim();
     if (!content || busy) return;

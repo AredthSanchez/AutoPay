@@ -1,4 +1,8 @@
+/**
+ * Select with a clear action. Supports a parent-controlled value or internal state seeded by defaultValue.
+ */
 import React, { Children, useState } from "react";
+// The clear control sends resetValue through the same onChange contract as the select.
 export default function ClearableSelect({
   children,
   value,

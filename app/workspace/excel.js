@@ -1,3 +1,7 @@
+/**
+ * Creates a minimal XLSX workbook in the browser using XML parts in an uncompressed ZIP.
+ * User-entered strings are written as text cells, while invoice amounts remain numeric cells.
+ */
 import { status, paymentDay, aging } from "./domain.js";
 const encoder = new TextEncoder();
 const xml = (value) =>
@@ -21,6 +25,7 @@ function crc32(bytes) {
   return (crc ^ 0xffffffff) >>> 0;
 }
 // OOXML is a ZIP of XML parts. Stored entries avoid an extra runtime dependency.
+// Write ZIP local headers, CRC checksums, and a central directory for the XLSX package.
 function zip(parts) {
   const entries = [],
     directory = [];
@@ -69,6 +74,7 @@ function zip(parts) {
     type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
   });
 }
+// Use inline-string cells for user text so leading =, +, or - is not interpreted as a formula.
 export function invoiceWorkbook(invoices, paymentLabels = {}) {
   const rows = [
     [
@@ -129,6 +135,7 @@ export function invoiceWorkbook(invoices, paymentLabels = {}) {
     "xl/worksheets/sheet1.xml": `<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews><cols><col min="1" max="13" width="22" customWidth="1"/></cols><sheetData>${sheet}</sheetData><autoFilter ref="A1:M${rows.length}"/></worksheet>`,
   });
 }
+// Release the temporary object URL after the browser has started the download.
 export function downloadWorkbook(blob, name) {
   const url = URL.createObjectURL(blob),
     a = document.createElement("a");

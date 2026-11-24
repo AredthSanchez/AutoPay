@@ -1,3 +1,6 @@
+/**
+ * Verifies the D1 attachment adapter round-trips multi-chunk binary data and removes stored chunks.
+ */
 import test from "node:test";
 import assert from "node:assert/strict";
 import { setup } from "./helpers.mjs";

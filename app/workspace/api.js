@@ -1,9 +1,14 @@
+/**
+ * Shared browser API transport. Adds the current bearer token and selected business to requests.
+ * A business header selects a workspace; the server still verifies membership on every request.
+ */
 export const backend = true;
 let currentBusiness = "";
 let accessTokenProvider = async () => null;
 export const setAccessTokenProvider = (provider) => {
   accessTokenProvider = provider;
 };
+// Resolve the current access token on demand so refreshed sessions are used without reloading.
 export async function authorizedHeaders(headers = {}) {
   const token = await accessTokenProvider();
   return { ...headers, ...(token ? { Authorization: "Bearer " + token } : {}) };
@@ -58,6 +63,7 @@ export const api = {
   delete: (id) => request(`/invoices/${id}/delete`, {}),
   restore: (id) => request(`/invoices/${id}/restore`, {}),
   attachments: (id) => request(`/invoices/${id}/attachments`),
+  // Let the browser supply the multipart boundary; do not set Content-Type for FormData.
   async attach(id, file) {
     const data = new FormData();
     data.append("file", file);
@@ -76,6 +82,7 @@ export const api = {
     }
     return r.json();
   },
+  // Fetch with authorization before creating a download URL; a plain anchor cannot attach the bearer token.
   async download(id, file) {
     const r = await fetch(`/api/invoices/${id}/attachments/${file.id}/download`, {
       credentials: "same-origin",

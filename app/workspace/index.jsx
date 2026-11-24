@@ -1,3 +1,7 @@
+/**
+ * Main business workspace: navigation, invoice/client views, bulk actions, and record dialogs.
+ * Form components collect edits; api.js sends them to the server for validation and persistence.
+ */
 "use client";
 import ClearableSelect from "../clearable-select";
 import React, { useEffect, useRef, useState } from "react";
@@ -69,6 +73,7 @@ const Badge = ({ invoice }) => (
     {{ OPEN: "Pending", OVERDUE: "Overdue", PAID: "Paid", VOID: "Void" }[status(invoice)]}
   </span>
 );
+// Own the active view and cached records; refresh after server mutations to reflect shared business state.
 function App({ account, business, businesses, switchBusiness, onSignOut }) {
   const [rowInvoiceId, setRowInvoiceId] = useState(null),
     [quickView, setQuickView] = useState("all"),
@@ -193,6 +198,7 @@ function App({ account, business, businesses, switchBusiness, onSignOut }) {
   function toggleChecked(id) {
     setChecked((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
   }
+  // Track per-invoice failures so unsuccessful rows remain available for retry.
   async function bulk(action, ids = checkedIds, payment) {
     if (!ids.length) return;
     setBusy(true);
@@ -229,6 +235,7 @@ function App({ account, business, businesses, switchBusiness, onSignOut }) {
                 : `${ids.length} attention flags cleared`,
       );
   }
+  // Export the selected rows when present; otherwise use the current filtered invoice view.
   function exportExcel() {
     const rows = checkedInvoices.length ? checkedInvoices : filtered;
     downloadWorkbook(invoiceWorkbook(rows, paymentLabels), "autopay-invoices.xlsx");
@@ -1796,6 +1803,7 @@ function Stat({ label, amount, sub, icon: I, tone = "" }) {
     </div>
   );
 }
+// Shared native modal dialog; handles Escape/backdrop dismissal and closes the dialog on unmount.
 function Modal({ title, onClose, children }) {
   const ref = useRef();
   useEffect(() => {
@@ -1833,6 +1841,7 @@ function Modal({ title, onClose, children }) {
     </dialog>
   );
 }
+// Collect editable invoice fields and line items. The API recalculates totals and validates status transitions.
 function InvoiceForm({
   onSave,
   busy,
@@ -2185,6 +2194,7 @@ function InvoiceForm({
     </form>
   );
 }
+// A simulation is bookkeeping only. The current Worker explicitly rejects live collection calls.
 function VoiceDialog({ invoice, live, busy, onRun, onSetup }) {
   const [outcome, setOutcome] = useState("success"),
     [consent, setConsent] = useState(false);
@@ -2251,6 +2261,7 @@ function VoiceDialog({ invoice, live, busy, onRun, onSetup }) {
   );
 }
 export default App;
+// Client profile fields are separate from the owner-only banking form below.
 function ClientForm({ onSave, busy, initialClient }) {
   const [d, setD] = useState({
       name: initialClient?.name || "",
@@ -2359,6 +2370,7 @@ function ClientForm({ onSave, busy, initialClient }) {
     </form>
   );
 }
+// Edit invoice notes without replacing the other invoice fields.
 function NotesForm({ invoice, onSave, busy }) {
   const [notes, setNotes] = useState(invoice.notes || ""),
     [error, setError] = useState("");
@@ -2401,6 +2413,7 @@ function NotesForm({ invoice, onSave, busy }) {
     </form>
   );
 }
+// Display setup requirements and current backend capability; this screen does not provision Twilio.
 function VoiceSetup({ setup, live, refresh }) {
   const [step, setStep] = useState(0);
   const steps = [
@@ -2545,6 +2558,7 @@ function VoiceSetup({ setup, live, refresh }) {
   );
 }
 
+// Edits payment metadata for an invoice already marked paid; it does not process a charge.
 function PaymentForm({ invoice, onSave, busy }) {
   const [method, setMethod] = useState(
       ["CHECK", "ACH", "BANK_TRANSFER", "CARD", "CASH", "OTHER"].includes(invoice.paymentMethod)
@@ -2604,6 +2618,7 @@ function PaymentForm({ invoice, onSave, busy }) {
     </form>
   );
 }
+// List, upload, download, and remove files through the authenticated invoice-scoped API.
 function Attachments({ invoice, onUpdate }) {
   const [files, setFiles] = useState([]),
     [busy, setBusy] = useState(false),
@@ -2747,6 +2762,7 @@ function Attachments({ invoice, onUpdate }) {
     </section>
   );
 }
+// Controlled filters keep the clear action and invoice view in sync.
 function InvoiceFilters({ values, onChange, statusFilter, setStatus, clear }) {
   const update = (key, value) => onChange({ ...values, [key]: value });
   const invalid =
@@ -2884,6 +2900,7 @@ function InvoiceFilters({ values, onChange, statusFilter, setStatus, clear }) {
     </div>
   );
 }
+// Deletion is reversible: these rows remain stored and can be restored through the API.
 function TrashInvoices({ invoices, busy, restore }) {
   return (
     <div className="panel activitypanel">
@@ -2910,6 +2927,7 @@ function TrashInvoices({ invoices, busy, restore }) {
     </div>
   );
 }
+// Search the loaded business records and route selections to invoice or client details.
 function WorkspaceSearch({ invoices, clients, onInvoice, onClient }) {
   const [query, setQuery] = useState("");
   const results = workspaceMatches(query, invoices, clients),
@@ -3004,6 +3022,7 @@ function WorkspaceSearch({ invoices, clients, onInvoice, onClient }) {
     </div>
   );
 }
+// Bank details are fetched only through the owner-authorized endpoint, not the general client list.
 function BankForm({ client, onUpdated }) {
   const [details, setDetails] = useState(null),
     [bank, setBank] = useState({
@@ -3152,6 +3171,7 @@ function BankForm({ client, onUpdated }) {
     </form>
   );
 }
+// Show the saved client profile and navigation to edits, banking, and related invoices.
 function ClientDetails({ client, edit, bank, invoice }) {
   return (
     <div className="client-detail">
@@ -3215,6 +3235,7 @@ function ClientDetails({ client, edit, bank, invoice }) {
   );
 }
 
+// Capture a manual bookkeeping payment for selected open invoices; no transfer is initiated.
 function RecordPayment({ count, busy, onSave }) {
   const [payment, setPayment] = useState({
       paymentDate: localDate(),

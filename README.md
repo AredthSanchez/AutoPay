@@ -6,6 +6,8 @@ A shared business invoice workspace with individual email/password accounts. The
 
 For a complete explanation of the architecture, every source module, database tables, API routes, deployment, tests, and limitations, read the [Complete Project Guide](docs/PROJECT_GUIDE.md).
 
+For an exhaustive index of every tracked file and its responsibilities, read the [File-by-file Guide](docs/FILE_GUIDE.md).
+
 ## Features
 
 - Supabase email/password signup and login, email verification, password recovery and logout.

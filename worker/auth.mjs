@@ -1,4 +1,9 @@
+/**
+ * Server authentication adapter: validates public configuration and verifies bearer tokens with Supabase.
+ * Profile names are display data; business permissions come from D1 memberships, not editable metadata.
+ */
 export class AuthUnavailable extends Error {}
+// Only accept an HTTPS origin and public publishable/legacy anon keys; reject server-secret credentials.
 export function authConfig(env) {
   const url = String(env.SUPABASE_URL || "").replace(/\/$/, "");
   const key = String(env.SUPABASE_PUBLISHABLE_KEY || "");
@@ -29,6 +34,7 @@ export function authConfig(env) {
   } else if (!key.startsWith("sb_publishable_")) return null;
   return { url, key };
 }
+// Verify against Supabase Auth, not a locally decoded JWT or identity headers from a former host.
 export async function authenticatedUser(request, env) {
   const config = authConfig(env);
   if (!config) throw new AuthUnavailable("Email login is not configured yet.");

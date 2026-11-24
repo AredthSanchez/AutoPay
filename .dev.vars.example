@@ -1,3 +1,4 @@
+# Local-only server environment template. Keep actual values in ignored .dev.vars, never in Git.
 # Copy to .dev.vars (ignored). Only public Supabase project values go below.
 SUPABASE_URL=https://your-project.supabase.co
 SUPABASE_PUBLISHABLE_KEY=sb_publishable_your_key

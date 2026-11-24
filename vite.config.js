@@ -1,3 +1,6 @@
+/**
+ * Vite build and local development configuration for React and the Cloudflare Worker integration.
+ */
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import { cloudflare } from "@cloudflare/vite-plugin";

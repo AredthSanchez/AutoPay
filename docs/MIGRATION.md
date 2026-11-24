@@ -1,5 +1,7 @@
 # Existing workspace migration
 
+For each migration and runtime module, see the [File-by-file Guide](FILE_GUIDE.md).
+
 The previous app used managed identity IDs and host-owned D1 storage. The new app uses a separate D1 database in the owner's Cloudflare account and Supabase identities. Replacing an old identity header with a user-provided email is not safe and is not supported.
 
 The migration imports records with their existing business and invoice IDs. It adds an explicit `legacy_identity_links` mapping from each imported account's normalized email to its former user ID. After that person creates and verifies a Supabase account using the same email, the Worker atomically moves that old ID's profile, memberships and owned businesses to the verified new ID. Caller-supplied display names or identity headers cannot select ownership. Duplicate mapping emails or conflicting existing accounts require manual review.

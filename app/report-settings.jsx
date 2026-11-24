@@ -1,3 +1,7 @@
+/**
+ * Loads and edits the active business report schedule and displays delivery history.
+ * Saving, test delivery, and retry actions are authorized by the server.
+ */
 import React, { useEffect, useState } from "react";
 import { request } from "./workspace/api";
 import ClearableSelect from "./clearable-select";
@@ -10,6 +14,7 @@ export default function ReportSettings({ business }) {
     [busy, setBusy] = useState(false),
     [error, setError] = useState(""),
     [message, setMessage] = useState("");
+  // Load schedule configuration and recent deliveries together for this business.
   async function load() {
     const [s, r] = await Promise.all([request("/report-settings"), request("/reports")]);
     setSettings(s);

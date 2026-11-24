@@ -1,3 +1,7 @@
+/**
+ * Integration coverage for business membership, scoped records, invoice actions, notifications, banking, and chat.
+ * Provider fetches are stubbed so tests do not send email, call OpenAI, or move money.
+ */
 import test from "node:test";
 import assert from "node:assert/strict";
 import { serve } from "../lib/autopay/service.mjs";

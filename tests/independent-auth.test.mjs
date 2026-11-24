@@ -1,3 +1,7 @@
+/**
+ * Checks the Worker authentication boundary, public key restrictions, and explicit legacy identity adoption.
+ * Supabase responses are mocked; these tests do not use production credentials or accounts.
+ */
 import test from "node:test";
 import assert from "node:assert/strict";
 import { authenticatedUser, authConfig, adoptMigratedIdentity } from "../worker/auth.mjs";

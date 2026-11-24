@@ -1,3 +1,7 @@
+/**
+ * Exercises schedule validation, timezone/DST behavior, authorization, retry idempotency, and delivery leases.
+ * Fixed times and mocked mail responses keep report tests repeatable without sending messages.
+ */
 import test from "node:test";
 import assert from "node:assert/strict";
 import { setup } from "./helpers.mjs";

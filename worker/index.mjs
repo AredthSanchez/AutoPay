@@ -1,7 +1,12 @@
+/**
+ * Cloudflare Worker entry point for public configuration, authenticated API requests, static assets, and cron.
+ * Security headers are applied to every response returned through handle().
+ */
 import { runScheduledReports } from "../lib/autopay/reports.mjs";
 import { DatabaseFiles } from "./database-files.mjs";
 import { serve } from "../lib/autopay/service.mjs";
 import { authConfig, authenticatedUser, adoptMigratedIdentity, AuthUnavailable } from "./auth.mjs";
+// Allow connections to this origin and the configured auth origin; deny embedding and privileged browser features.
 function secure(response, env) {
   const headers = new Headers(response.headers);
   headers.set("X-Content-Type-Options", "nosniff");
@@ -31,6 +36,7 @@ export async function handle(request, env) {
       },
       { headers: { "Cache-Control": "no-store" } },
     );
+  // Public boot configuration exposes only values that are safe for the browser SDK.
   else if (url.pathname === "/api/public-config" && request.method === "GET") {
     const c = authConfig(env);
     response = Response.json(
@@ -72,6 +78,7 @@ export async function handle(request, env) {
 }
 export default {
   fetch: handle,
+  // waitUntil keeps asynchronous report processing alive after the cron handler returns.
   async scheduled(controller, env, ctx) {
     ctx.waitUntil(
       runScheduledReports(env.DB, env).then((result) =>

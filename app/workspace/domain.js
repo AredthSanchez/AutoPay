@@ -1,5 +1,10 @@
+/**
+ * Pure invoice calculations and display helpers shared by the UI, server, and tests.
+ * Stored statuses are OPEN, PAID, and VOID; OVERDUE is derived from an open invoice due date.
+ */
 export const money = (n) =>
   new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(n);
+// Parse decimal digits into integer cents before multiplication to avoid floating-point currency drift.
 export const cents = (n) => {
   const value = String(n);
   if (!/^\d+(\.\d{1,2})?$/.test(value))
@@ -103,6 +108,7 @@ export const paymentDay = (i) => {
   if (Number.isNaN(d.getTime())) return null;
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 };
+// Paid invoices stop aging on their recorded payment day; VOID invoices have no aging value.
 export function aging(i, today = localDate()) {
   if (i.status === "VOID") return { text: "Not applicable", days: null };
   const reference = i.status === "PAID" ? paymentDay(i) : today;
@@ -127,6 +133,7 @@ export const emptyFilters = () => ({
   amountMin: "",
   amountMax: "",
 });
+// Ranges are inclusive. Empty strings mean no bound, so zero remains a valid numeric filter.
 export function matchesFilters(i, f) {
   const day = i.status === "PAID" ? paymentDay(i) : null,
     days = aging(i).days;
@@ -177,6 +184,7 @@ export function quickMatches(invoice, view, today = localDate()) {
   }
   return true;
 }
+// Sort a copy so view changes do not reorder the canonical invoice array.
 export function sortInvoices(invoices, sort = "newest") {
   const collator = new Intl.Collator("en", { numeric: true, sensitivity: "base" });
   return [...invoices].sort((a, b) => {
@@ -190,6 +198,7 @@ export function sortInvoices(invoices, sort = "newest") {
     return result || collator.compare(a.number, b.number) || collator.compare(a.id, b.id);
   });
 }
+// Reuse editable invoice content while clearing identity, settlement metadata, and prior history.
 export function duplicateDraft(invoice) {
   return {
     client: invoice.client,
