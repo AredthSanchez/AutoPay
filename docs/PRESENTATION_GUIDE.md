@@ -2,6 +2,12 @@
 
 Use alongside the [code walkthrough](STUDY_GUIDE.md), [tool inventory](TOOLS_AND_SERVICES.md), and [file guide](FILE_GUIDE.md). Answers below describe the root application, not the archived Java project. They are prompts for rehearsal, not claims that every feature has been independently verified in production.
 
+## Explaining the diagram out loud
+
+> The top box is the screen I use. When I save an invoice, it sends the form to the middle box, which is the server code. That code checks my login, my business access, and the invoice fields. It then saves the invoice in the bottom box, the database. The result travels back to the screen. React builds the screen, Cloudflare Workers runs the checks, and Cloudflare D1 stores the records.
+
+If asked where passwords are handled, explain that Supabase is the separate login service. If asked where email is handled, show the separate email diagram. These services support the main flow; they are not additional screens the user must operate.
+
 ## Project introduction
 
 > AutoPay is a shared invoice workspace for businesses. Each team member has an individual login, while access to invoices and clients is controlled by business membership. The app supports editing and filtering invoices, attachments, Excel export, payment records, email reports, and invoice summaries. Its current payment features record activity; they do not move money or place real collection calls.

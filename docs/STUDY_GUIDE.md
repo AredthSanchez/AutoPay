@@ -4,28 +4,79 @@ AutoPay is a shared invoice workspace for businesses. Team members have separate
 
 This guide describes the root application in this repository. The older Java application inside `AutoPay-source.zip` is a separate implementation. Start with this guide, then use [Presentation and technical questions](PRESENTATION_GUIDE.md) to rehearse and [Tools and services](TOOLS_AND_SERVICES.md) to review the stack. The [file guide](FILE_GUIDE.md) describes each source file.
 
-## 1. The system in one diagram
+## 1. What happens when you use AutoPay
+
+Start with an action you can see: creating an invoice. You fill in a form and click Save. AutoPay checks the information, stores it, and shows the result. Three parts work together to do that.
 
 ```mermaid
 flowchart TD
-    User[User in a browser] --> UI[React screens]
-    UI -->|Email/password and session| Auth[Supabase Auth]
-    UI -->|API request with login token and business ID| Worker[Cloudflare Worker]
-    Worker -->|Verify token| Auth
-    Worker --> Service[Business API and permission checks]
-    Service --> DB[(Cloudflare D1: business records)]
-    Service --> Files[D1 file chunks by default]
-    Service -->|Optional invoice alerts| Mail[Resend]
-    Service -->|Testing mode| Rules[Local question-answering rules]
-    Service -->|Only when paid mode is enabled| AI[OpenAI Responses API]
-    Cron[Cloudflare schedule: every 15 minutes] --> Reports[Report scheduler and delivery queue]
-    Reports --> DB
-    Reports --> Mail
+    Screen["1. The screen you use<br/>Forms, buttons, and invoice lists"]
+    Server["2. The code that handles your request<br/>Checks access and invoice details"]
+    Data["3. The place records are saved<br/>Businesses, clients, and invoices"]
+    Screen -->|"Send the invoice form"| Server
+    Server -->|"Save the checked invoice"| Data
+    Data -->|"Return the saved record"| Server
+    Server -->|"Return the result to display"| Screen
 ```
 
-The browser displays information and gathers input. The Worker receives requests. The business service decides whether each request is allowed and valid. D1 stores the records. Supabase handles identity, not the invoice database.
+**Read the boxes from top to bottom.** Each box is a job, not a separate screen you need to open. The arrows describe messages moving between those parts. The arrows back up explain how the result gets back to you. They do not mean that the database displays the website itself.
 
-A backend is necessary because browser code can be inspected or bypassed. Hiding an owner-only button is useful presentation, but it does not stop someone from sending the same request themselves. The server must enforce the restriction.
+| Diagram box         | What it does                                                                              | Tool used in AutoPay                                                                                                             |
+| ------------------- | ----------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| 1. The screen       | Displays the form, remembers what you type, and sends it when you click Save.             | **React**, a library for building interactive screens. It runs in your browser.                                                  |
+| 2. Request handling | Checks that you are logged in, belong to the business, and entered valid invoice details. | **Cloudflare Workers**, a service that runs AutoPay's server code. A server is the part that handles requests behind the screen. |
+| 3. Saved records    | Keeps the invoice so it still exists after the page is closed.                            | **Cloudflare D1**, a database service. A database is an organized collection of saved records.                                   |
+
+### A concrete example
+
+Suppose you enter an invoice for two hours of work at $50 per hour.
+
+1. **On your screen:** React displays the client, quantity, price, and Save button. The browser holds your current form entries.
+2. **When you click Save:** The screen sends those entries to AutoPay's server code. This message is called a **request**.
+3. **Before saving:** The server verifies your login and business access. It checks the fields and calculates $100 itself, rather than trusting the total shown in the browser.
+4. **In saved storage:** D1 stores the invoice under that business.
+5. **Back on your screen:** The server returns a **response**, meaning its reply. The screen reloads the list and displays the saved invoice. If a check failed, it shows an error instead.
+
+Typing into a form is not the same as saving a record. React keeps the form usable; the server and database make the change persistent.
+
+### Where login fits
+
+**Supabase Auth** is the account service. It handles signup, passwords, and login sessions. After login, the browser receives a temporary **token**, which is evidence of that login. The browser sends the token with requests, and AutoPay's server asks Supabase to verify it.
+
+A valid login answers “Who is this user?” AutoPay then checks its own saved business memberships to answer “May this user access this business?” These are separate checks. Supabase does not hold AutoPay's invoice database in this implementation.
+
+### Where email fits
+
+Email is a separate path. **Resend** is the service AutoPay asks to send a message when email settings are configured.
+
+```mermaid
+flowchart TD
+    Job["AutoPay prepares a report<br/>when its schedule is due"]
+    Sender["Resend receives the email request"]
+    Inbox["The recipient's email system"]
+    Job -->|"Submit the email"| Sender
+    Sender -->|"Attempt delivery"| Inbox
+```
+
+The schedule is checked by Cloudflare every 15 minutes. No one needs to keep the website open. An accepted email request is not proof that the message reached the inbox; the app records delivery attempts and can retry failures.
+
+### The other names you will see
+
+| Name       | What it is                                       | Why it is here                                                                                     |
+| ---------- | ------------------------------------------------ | -------------------------------------------------------------------------------------------------- |
+| JavaScript | A programming language.                          | Contains instructions for what the screens and server do.                                          |
+| HTML       | Describes the starting webpage.                  | Gives the browser the page and a place to display AutoPay.                                         |
+| CSS        | Styling rules.                                   | Controls colors, spacing, tables, and how the page fits a phone.                                   |
+| SQL        | A language for working with database records.    | Asks D1 to find, add, or update invoices and other records.                                        |
+| Git        | A tool that records file changes.                | Keeps a history of the project's code and documentation.                                           |
+| GitHub     | A website that hosts the Git repository.         | Where you view the code and these guides. It is separate from the running AutoPay application.     |
+| Vite       | A development/build tool.                        | Runs the app during development and prepares files for hosting.                                    |
+| Node.js    | Runs JavaScript outside a browser.               | Runs local development tools and automated tests. The live server code runs on Cloudflare Workers. |
+| npm        | A package installer and command runner.          | Installs libraries and starts commands such as tests or builds.                                    |
+| Wrangler   | Cloudflare's command-line tool.                  | Publishes the app and manages its database setup and secret settings.                              |
+| OpenAI     | An optional service that generates chat answers. | Not called in the default free testing mode; that mode uses rules written in the project.          |
+
+You do not need to install or open each of these to use AutoPay. Some run the application, some help develop it, and some are optional services. The [tool guide](TOOLS_AND_SERVICES.md) separates those groups.
 
 ## 2. Terms used in the code
 
@@ -52,6 +103,8 @@ A backend is necessary because browser code can be inspected or bypassed. Hiding
 
 ## 3. How the browser starts
 
+Opening the website starts a chain of files. The first file provides the page; the next starts React; the account screen decides whether to show login or a business workspace.
+
 Read [index.html](../index.html), [src/main.jsx](../src/main.jsx), and [app/auth-shell.jsx](../app/auth-shell.jsx).
 
 1. The browser loads `index.html`, including the root element and JavaScript entry.
@@ -77,6 +130,8 @@ Updating React state causes React to calculate the new screen. It does not autom
 The auth shell guards against stale responses: if an older profile request finishes after a newer one, it should not replace the newer account state. This is a request-ordering problem, not a database transaction.
 
 ## 4. Follow one invoice from the form to storage
+
+This is the Save example from the diagram, followed through the actual filenames. Each step passes information to the next; no single file does the whole job.
 
 Read `InvoiceForm` and `App` in [app/workspace/index.jsx](../app/workspace/index.jsx), then [api.js](../app/workspace/api.js), [worker/index.mjs](../worker/index.mjs), and [service.mjs](../lib/autopay/service.mjs).
 
@@ -122,6 +177,8 @@ These statuses are conventions used by this implementation; inspect the specific
 
 ## 5. Accounts, businesses, and the database
 
+Think of a database table as a structured list with rows and columns. Different tables hold different kinds of records. An ID is a unique label used to connect records, such as an invoice to its business.
+
 Read the SQL files in [drizzle](../drizzle) and `scope()`, `owner()`, and `invoice()` in the service.
 
 | Table/group                       | What it stores                                                    | Relationship to know                                            |
@@ -151,6 +208,8 @@ Team members query the same database through their memberships. That makes the r
 
 ## 6. Invoice rules and safe editing
 
+These rules decide what counts as a valid amount, when an invoice is late, and how changes are saved without silently overwriting another request.
+
 Read [domain.js](../app/workspace/domain.js) and `writeInvoice()` in the service.
 
 **Money:** `$12.50` becomes 1,250 cents before arithmetic. Two items at that price total 2,500 cents, then display as `$25.00`. Decimal floating-point numbers can introduce small errors, so arithmetic uses integer cents. Validation also bounds quantities, item counts, and totals.
@@ -175,6 +234,8 @@ If a teammate has already changed the version, zero rows match and the server re
 
 ## 7. Identity and data protection
 
+There are two questions to check: whether the login is real, and whether that user has permission for this business or action. Protecting bank details adds another layer.
+
 Read [worker/auth.mjs](../worker/auth.mjs), `scope()`/`owner()` in the service, and [bank.mjs](../lib/autopay/bank.mjs).
 
 - Supabase verifies the bearer token through its user endpoint. The server requires a confirmed, non-anonymous email.
@@ -195,6 +256,8 @@ This is application-layer field encryption, not end-to-end encryption: the serve
 
 ## 8. Attachments and Excel exports
 
+An attachment is a file saved with an invoice. An export is a new spreadsheet created from invoice records. Uploading an attachment and downloading a spreadsheet use different code paths.
+
 Read [worker/database-files.mjs](../worker/database-files.mjs), `files()` in the service, and [excel.js](../app/workspace/excel.js).
 
 **Upload:** The server checks membership, finds the invoice within the business, bounds the request, parses the file, checks file/count/total-size limits, saves bytes, and inserts the attachment listing. The insert rechecks limits to handle competing uploads; failed listing operations attempt to clean up the saved bytes.
@@ -206,6 +269,8 @@ The current limits are 5 MiB per file, 10 files and 25 MiB per invoice. D1 store
 Checked invoices are exported when any are selected; otherwise the current filtered list is exported. Exporting does not change invoice records. Uploaded files are not virus-scanned by this implementation.
 
 ## 9. Email delivery and report scheduling
+
+The app saves both the desired schedule and the results of individual send attempts. Keeping those separate lets it explain a failure and try again later.
 
 Read [reports.mjs](../lib/autopay/reports.mjs), invoice notification code in the service, and the `scheduled` handler in the Worker.
 
@@ -219,6 +284,8 @@ The report includes current balances and counts, not just changes since the prev
 
 ## 10. The two chat modes
 
+The testing assistant recognizes questions using programmed rules. The optional OpenAI mode asks an outside AI service. The same chat window can display either, so the mode matters.
+
 Read [testing-chat.mjs](../lib/autopay/testing-chat.mjs), [chat.mjs](../lib/autopay/chat.mjs), and the `/chat` branch in the service.
 
 The checked-in configuration selects `testing`. It recognizes question patterns, filters supplied records, and calculates summaries. It is deterministic code, not a local language model. It cannot answer arbitrary questions or supported date ranges beyond its implemented rules.
@@ -230,6 +297,8 @@ Totals are calculated before detail truncation. Paid mode includes up to 200 inv
 Prompt instructions and omitted data reduce risk, but generated answers can still be wrong. Compare important summaries with the underlying invoices. This is not model training, fine-tuning, vector search, or a retrieval database implementation.
 
 ## 11. Testing and deployment
+
+A test is a repeatable check that compares a result with what should happen. A build prepares the application files. Deployment publishes those files and server code. Passing one step does not prove the others worked.
 
 `npm test` runs Node's built-in test runner. The repository has 39 tests at the documentation baseline. They check domain calculations, business isolation, identity handling, banking, attachments, exports, chat, and scheduled email behavior. Test count can change as coverage grows.
 

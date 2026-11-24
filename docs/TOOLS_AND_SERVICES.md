@@ -4,6 +4,29 @@ This inventory separates the current application, optional integrations, develop
 
 The current application is the source tree at the repository root. Exact direct dependency declarations come from [package.json](../package.json); resolved installed versions and transitive dependencies come from [package-lock.json](../package-lock.json). Hosting configuration is in [wrangler.jsonc](../wrangler.jsonc).
 
+## How the tools fit together
+
+AutoPay uses several tools because displaying a screen, saving records, checking a login, and sending email are different jobs.
+
+| Job                                 | Tool               | What to remember                                                                                 |
+| ----------------------------------- | ------------------ | ------------------------------------------------------------------------------------------------ |
+| Display the screens                 | React              | Builds the interactive forms, tables, and buttons in the browser.                                |
+| Define behavior                     | JavaScript         | The language used to write instructions for the app. React is a library used from that language. |
+| Style the screens                   | CSS                | Changes appearance, not access permissions or saved invoice data.                                |
+| Handle requests                     | Cloudflare Workers | Runs the behind-the-scenes code that checks and saves information.                               |
+| Keep business records               | Cloudflare D1      | Stores the organized lists of businesses, clients, and invoices.                                 |
+| Check accounts and passwords        | Supabase Auth      | Manages login. AutoPay separately checks business membership.                                    |
+| Send emails                         | Resend             | Receives email requests when sender settings are configured.                                     |
+| Keep project history                | Git and GitHub     | Git records changes; GitHub hosts that history and the files.                                    |
+| Run tools on a development computer | Node.js and npm    | Node runs JavaScript tools; npm installs packages and runs project commands.                     |
+| Prepare the app for hosting         | Vite               | Builds the files that will be published.                                                         |
+| Publish to Cloudflare               | Wrangler           | Sends the build and configuration to the hosting service.                                        |
+| Generate optional AI answers        | OpenAI             | Only used when the paid mode is enabled. Testing mode does not call it.                          |
+
+A **library** is reusable code the project imports. A **service** runs outside the codebase, such as the login or email provider. A **development tool** helps build or check the application. A **package** is an installable bundle of code; not every installed package was written specifically for AutoPay.
+
+The tables below keep the exact technical names and versions for reference. The archived packages at the end belong to the earlier implementation, not the current app you are presenting.
+
 ## Languages and file formats
 
 | Technology              | Where it is used                                             | What it does                                                                                                             |
